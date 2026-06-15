@@ -2,10 +2,10 @@ server:
   port: 8081
 spring:
   application:
-    name: hmdp
+    name: city-review
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://127.0.0.1:3306/hmdp?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://127.0.0.1:3306/city_review?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
     username: root
     password: root
   redis:
@@ -20,7 +20,7 @@ spring:
   jackson:
     default-property-inclusion: non_null # JSON处理时忽略空字段
 mybatis-plus:
-  type-aliases-package: com.hmdp.entity # 别名扫描包
+  type-aliases-package: com.cjj.entity # 别名扫描包
 logging:
   level:
-    com.hmdp: debug
+    com.cjj: debug
