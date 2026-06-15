@@ -1,7 +1,7 @@
 package com.cjj.utils;
 
 /**
- * @author 虎哥
+ * @author 陈俊杰
  */
 public abstract class RegexPatterns {
     /**
