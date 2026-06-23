@@ -57,6 +57,12 @@ public class Blog implements Serializable {
     private Boolean isLike;
 
     /**
+     * 关联商户名（非数据库字段）
+     */
+    @TableField(exist = false)
+    private String shopName;
+
+    /**
      * 标题
      */
     private String title;

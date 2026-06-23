@@ -1,11 +1,20 @@
 package com.cjj.controller;
 
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cjj.dto.Result;
 import com.cjj.entity.Blog;
+import com.cjj.entity.Shop;
+import com.cjj.entity.User;
+import com.cjj.service.IShopService;
+import com.cjj.service.IUserService;
 import com.cjj.service.impl.BlogServiceImpl;
+import com.cjj.utils.SystemConstants;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * city-review 探店笔记控制器
@@ -16,6 +25,55 @@ public class BlogController {
 
     @Resource
     private BlogServiceImpl blogService;
+
+    @Resource
+    private IUserService userService;
+
+    @Resource
+    private IShopService shopService;
+
+    /**
+     * 首页帖子流（分页 + 关联商户和用户信息）
+     * GET /api/blog/list?page=1&size=10
+     */
+    @GetMapping("/list")
+    public Result listBlogs(
+            @RequestParam(value = "page", defaultValue = "1") Integer page,
+            @RequestParam(value = "size", defaultValue = "10") Integer size) {
+        Page<Blog> blogPage = blogService.getBaseMapper().selectPage(
+                new Page<>(page, size),
+                Wrappers.<Blog>lambdaQuery().orderByDesc(Blog::getCreateTime));
+
+        List<Map<String, Object>> enriched = blogPage.getRecords().stream().map(blog -> {
+            Map<String, Object> m = new HashMap<>();
+            m.put("id", blog.getId());
+            m.put("title", blog.getTitle());
+            m.put("content", blog.getContent());
+            m.put("images", blog.getImages());
+            m.put("liked", blog.getLiked());
+            m.put("comments", blog.getComments());
+            m.put("createTime", blog.getCreateTime());
+
+            // 关联用户
+            User user = userService.getById(blog.getUserId());
+            m.put("userId", blog.getUserId());
+            m.put("nickname", user != null ? user.getNickName() : "匿名");
+            m.put("avatar", user != null ? user.getIcon() : "");
+
+            // 关联商户
+            Shop shop = shopService.getById(blog.getShopId());
+            m.put("shopId", blog.getShopId());
+            m.put("shopName", shop != null ? shop.getName() : "未知商户");
+
+            return m;
+        }).collect(Collectors.toList());
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("records", enriched);
+        result.put("total", blogPage.getTotal());
+        result.put("pages", blogPage.getPages());
+        return Result.ok(result);
+    }
 
     /**
      * 发布探店笔记

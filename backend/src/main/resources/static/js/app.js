@@ -1,240 +1,326 @@
 /* ============================================================
-   city-review 城市点评 — 首页逻辑（大众点评风格）
+   city-review 首页 — 完整交互（搜索/分类/城市/详情）
    ============================================================ */
 
-// ==================== 模拟帖子数据 ====================
-const postList = [
-  {
-    id: 1,
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=fish',
-    nickname: '小鱼同学',
-    title: '无尽浪漫的夜晚｜在万花丛中摇晃着红酒杯🍷品战斧牛排🥩',
-    content: '生活就是一半烟火·一半诗意。手执烟火谋生活，心怀诗意以谋爱。男朋友给不了的浪漫要学会自己给🍒 无法重来的一生，尽量快乐。这家花园西餐厅到处都是花，美好无处不在～',
-    images: [
-      'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=300&h=300&fit=crop',
-      'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=300&h=300&fit=crop',
-      'https://images.unsplash.com/photo-1544025162-d76694265947?w=300&h=300&fit=crop'
-    ],
-    likes: 128,
-    comments: 32,
-    shopName: '小筑里·浪漫花园餐厅',
-    isLiked: false
-  },
-  {
-    id: 2,
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=coco',
-    nickname: '可可今天不吃肉',
-    title: '人均30💰杭州这家港式茶餐厅我疯狂打call‼️',
-    content: '又吃到一家好吃的茶餐厅🍴环境是怀旧tvb港风📺边吃边拍照片📷几十种菜品均价都在20+💰可以是很平价了！黯然销魂饭我吹爆！米饭上盖满了甜甜的叉烧还有两颗溏心蛋🍳',
-    images: [
-      'https://images.unsplash.com/photo-1552566626-52f8b828add9?w=300&h=300&fit=crop',
-      'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=300&h=300&fit=crop'
-    ],
-    likes: 96,
-    comments: 18,
-    shopName: '九记冰厅(远洋店)',
-    isLiked: true
-  },
-  {
-    id: 3,
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=keai',
-    nickname: '可爱多',
-    title: '杭州周末好去处｜💰50就可以骑马啦🐎',
-    content: '没想到在杭州周边还能找到这么宝藏的马场！50块钱就能体验骑马，教练很耐心，马儿也很温顺🐴 非常适合周末带小朋友来玩，拍照也很出片📸',
-    images: [
-      'https://images.unsplash.com/photo-1553284965-83e94889a2af?w=300&h=300&fit=crop',
-      'https://images.unsplash.com/photo-1566312525350-03d3effd2931?w=300&h=300&fit=crop',
-      'https://images.unsplash.com/photo-1534773727418-e77b2f4f653b?w=300&h=300&fit=crop'
-    ],
-    likes: 203,
-    comments: 45,
-    shopName: '骑士马术俱乐部',
-    isLiked: false
-  },
-  {
-    id: 4,
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=hotpot',
-    nickname: '吃货小张',
-    title: '海底捞新出的番茄锅底也太好吃了🍅人均104吃到撑',
-    content: '周末和朋友去海底捞打卡了新出的浓香番茄锅底，真的绝了！🍲 点了一桌子菜，服务还是一如既往的好，小姐姐还送了小零食，爱了爱了💕',
-    images: [
-      'https://images.unsplash.com/photo-1552611052-bdfb7343e9f8?w=300&h=300&fit=crop',
-      'https://images.unsplash.com/photo-1506354666786-959d6d497f1a?w=300&h=300&fit=crop'
-    ],
-    likes: 67,
-    comments: 12,
-    shopName: '海底捞火锅(水晶城店)',
-    isLiked: false
-  },
-  {
-    id: 5,
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=ktvfan',
-    nickname: '麦霸小王',
-    title: '开乐迪KTV夜场实测｜音效超赞🎵性价比绝了',
-    content: '作为资深K歌爱好者，这家KTV我真的吹爆！🎤 音响是进口的，曲库超全，新歌更新也快。重点是价格真的很良心，学生党也能轻松消费。包厢装修很有格调，拍照也好看📷',
-    images: [
-      'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=300&h=300&fit=crop',
-      'https://images.unsplash.com/photo-1571896349842-daf07917be4c?w=300&h=300&fit=crop'
-    ],
-    likes: 152,
-    comments: 28,
-    shopName: '开乐迪KTV(运河上街店)',
-    isLiked: false
-  }
+// ---- 全局状态 ----
+let currentCity = localStorage.getItem('city') || '杭州';
+let activeCategory = null;
+let searchKeyword = '';
+let searchTimer = null;
+let allBlogs = [];
+
+// 国内城市列表
+const CITY_LIST = [
+  { group: '热门', cities: ['北京','上海','广州','深圳','杭州','成都','武汉','南京','重庆','西安','长沙','苏州'] },
+  { group: '华东', cities: ['上海','杭州','南京','苏州','宁波','无锡','合肥','济南','青岛','厦门','福州','南昌'] },
+  { group: '华北', cities: ['北京','天津','石家庄','太原','呼和浩特'] },
+  { group: '华南', cities: ['广州','深圳','东莞','佛山','南宁','海口','珠海'] },
+  { group: '华中', cities: ['武汉','长沙','郑州','洛阳'] },
+  { group: '西南', cities: ['成都','重庆','昆明','贵阳','拉萨'] },
+  { group: '西北', cities: ['西安','兰州','西宁','银川','乌鲁木齐'] },
+  { group: '东北', cities: ['沈阳','大连','哈尔滨','长春','吉林'] }
 ];
 
-// ==================== 渲染帖子列表 ====================
-function renderPosts() {
+document.addEventListener('DOMContentLoaded', async () => {
+  renderCity();
+  buildCityPicker();
+  await loadPosts();
+  bindEvents();
+  console.log('🏙️ city-review 首页就绪 | 城市：' + currentCity);
+});
+
+// ==================== 城市选择器 ====================
+function renderCity() {
+  const el = document.querySelector('.city-name');
+  if (el) el.textContent = currentCity;
+}
+
+function openCityPicker() {
+  document.getElementById('cityPicker').style.display = 'flex';
+}
+
+function closeCityPicker() {
+  document.getElementById('cityPicker').style.display = 'none';
+}
+
+function buildCityPicker() {
+  const body = document.getElementById('cityPickerBody');
+  if (!body) return;
+  let html = '';
+  CITY_LIST.forEach(group => {
+    html += '<div class="city-group-title">' + group.group + '</div><div class="city-tags">';
+    group.cities.forEach(c => {
+      const cls = c === currentCity ? 'city-tag active' : 'city-tag';
+      html += '<span class="' + cls + '" onclick="selectCity(\'' + c + '\')">' + c + '</span>';
+    });
+    html += '</div>';
+  });
+  body.innerHTML = html;
+}
+
+function selectCity(city) {
+  currentCity = city;
+  localStorage.setItem('city', city);
+  renderCity();
+  closeCityPicker();
+  buildCityPicker();
+  showToast('已切换到 ' + city);
+  loadPosts();
+}
+
+// ==================== 数据加载（API） ====================
+async function loadPosts() {
+  try {
+    const res = await api.get('/blog/list', { params: { page: 1, size: 20 } });
+    if (res.data.code === 200 && res.data.data) {
+      allBlogs = res.data.data.records || [];
+    }
+  } catch (e) {
+    console.warn('帖子加载失败，使用本地数据', e);
+  }
+  renderPosts(allBlogs);
+}
+
+/** 渲染帖子卡片 */
+function renderPosts(posts) {
   const container = document.getElementById('feedList');
   if (!container) return;
 
-  container.innerHTML = postList.map(post => `
-    <article class="post-card" data-id="${post.id}" onclick="handlePostClick(${post.id})">
-      <!-- 卡片头部 -->
+  if (!posts || posts.length === 0) {
+    container.innerHTML = '<p style="text-align:center;color:#999;padding:40px 0;">暂无内容</p>';
+    return;
+  }
+
+  container.innerHTML = posts.map(p => `
+    <article class="post-card" onclick="goDetail(${p.id})">
       <div class="post-header">
-        <img class="post-avatar" src="${post.avatar}" alt="${post.nickname}" loading="lazy"
-             onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2250%22 fill=%22%23EEE%22/><text x=%2250%22 y=%2265%22 text-anchor=%22middle%22 font-size=%2240%22>👤</text></svg>'">
+        <img class="post-avatar" src="${p.avatar || 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2250%22 fill=%22%23EEE%22/></svg>'}" alt="" loading="lazy">
         <div class="post-user-info">
-          <div class="post-nickname">${escHtml(post.nickname)}</div>
-          <div class="post-shop">
-            <i class="fas fa-store"></i> ${escHtml(post.shopName)}
-          </div>
+          <div class="post-nickname">${escHtml(p.nickname || '匿名')}</div>
+          <div class="post-shop"><i class="fas fa-store"></i> ${escHtml(p.shopName || '未知商户')}</div>
         </div>
       </div>
-
-      <!-- 标题 -->
-      <h3 class="post-title">${escHtml(post.title)}</h3>
-
-      <!-- 正文摘要 -->
-      <p class="post-content">${escHtml(post.content)}</p>
-
-      <!-- 图片横向滑动 -->
-      ${post.images && post.images.length > 0 ? `
-      <div class="post-images">
-        ${post.images.map(img => `
-          <img class="post-image-item" src="${img}" alt="探店图片" loading="lazy"
-               onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22120%22 height=%22120%22><rect fill=%22%23EEE%22 width=%22120%22 height=%22120%22/><text x=%2260%22 y=%2270%22 text-anchor=%22middle%22 font-size=%2230%22>🖼️</text></svg>'">
-        `).join('')}
-      </div>` : ''}
-
-      <!-- 底部操作栏 -->
+      <h3 class="post-title">${escHtml(p.title || '')}</h3>
+      <p class="post-content">${escHtml(p.content || '')}</p>
+      ${renderImages(p.images)}
       <div class="post-actions" onclick="event.stopPropagation()">
-        <div class="post-action ${post.isLiked ? 'liked' : ''}" onclick="handleLike(${post.id})">
-          <i class="${post.isLiked ? 'fas' : 'far'} fa-heart"></i>
-          <span>${formatCount(post.likes)}</span>
+        <div class="post-action" onclick="handleLike(event, ${p.id})">
+          <i class="${p.isLiked ? 'fas' : 'far'} fa-heart"></i>
+          <span>${fmtCount(p.liked || 0)}</span>
         </div>
         <div class="post-action">
           <i class="far fa-comment-dots"></i>
-          <span>${formatCount(post.comments)}</span>
-        </div>
-        <div class="post-action" onclick="handleShare(${post.id})">
-          <i class="far fa-share-square"></i>
-          <span>分享</span>
+          <span>${fmtCount(p.comments || 0)}</span>
         </div>
       </div>
     </article>
   `).join('');
 }
 
-// ==================== 交互处理 ====================
-
-/** 点击帖子卡片 */
-function handlePostClick(id) {
-  const post = postList.find(p => p.id === id);
-  console.log('📝 帖子详情 JSON：', JSON.stringify(post, null, 2));
-  showToast('跳转至详情页：' + post.title);
+function renderImages(imagesStr) {
+  if (!imagesStr) return '';
+  const imgs = imagesStr.split(',').filter(Boolean);
+  if (imgs.length === 0) return '';
+  return `<div class="post-images">${imgs.map(u => `<img class="post-image-item" src="${u}" loading="lazy" onerror="this.style.display='none'">`).join('')}</div>`;
 }
 
-/** 点赞 / 取消点赞 */
-function handleLike(id) {
-  const post = postList.find(p => p.id === id);
-  if (!post) return;
+// ==================== 搜索（防抖） ====================
+function bindSearchEvents() {
+  const searchBox = document.getElementById('searchBox');
+  const input = document.querySelector('.search-input');
+  if (!input) return;
 
-  if (post.isLiked) {
-    post.isLiked = false;
-    post.likes--;
-  } else {
-    post.isLiked = true;
-    post.likes++;
+  // 点击搜索框区域
+  if (searchBox) {
+    searchBox.addEventListener('click', () => input.focus());
   }
-  renderPosts();
-  console.log(`❤️ 帖子 ${id} 点赞状态：${post.isLiked ? '已点赞' : '已取消'}，当前点赞数：${post.likes}`);
+
+  // keyup 防抖
+  input.addEventListener('keyup', function (e) {
+    const keyword = input.value.trim();
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => {
+      if (keyword) {
+        searchShops(keyword);
+      } else {
+        hideSearchResults();
+        renderPosts(allBlogs);
+      }
+    }, 400);
+  });
+
+  // 回车立即搜索
+  input.addEventListener('keypress', function (e) {
+    if (e.key === 'Enter') {
+      clearTimeout(searchTimer);
+      const keyword = input.value.trim();
+      if (keyword) searchShops(keyword);
+    }
+  });
+
+  // 允许输入
+  input.removeAttribute('readonly');
 }
 
-/** 分享 */
-function handleShare(id) {
-  showToast('分享功能开发中');
-  console.log(`📤 分享帖子 ID=${id}`);
+async function searchShops(keyword) {
+  searchKeyword = keyword;
+  try {
+    const res = await api.get('/shop/list', {
+      params: { name: keyword, city: currentCity }
+    });
+    if (res.data.code === 200) {
+      const shops = res.data.data || [];
+      showSearchResults(shops, keyword);
+    }
+  } catch (e) {
+    showToast('搜索失败');
+  }
 }
 
-// ==================== 分类导航点击 ====================
-document.addEventListener('DOMContentLoaded', () => {
-  // 加载帖子
-  renderPosts();
+function showSearchResults(shops, keyword) {
+  const el = document.getElementById('searchResults');
+  if (!el) return;
+
+  el.style.display = 'block';
+  if (shops.length === 0) {
+    el.innerHTML = `<div style="padding:16px;text-align:center;color:#999;">未找到与"${escHtml(keyword)}"相关的商户</div>`;
+    return;
+  }
+  el.innerHTML = `
+    <div style="padding:8px 16px;font-size:12px;color:#999;">搜索结果（${shops.length}）</div>
+    ${shops.map(s => `
+      <div class="card" style="margin:8px 12px;padding:12px;cursor:pointer" onclick="window.location.href='shop.html?id=${s.id}'">
+        <b>${escHtml(s.name)}</b>
+        <p style="font-size:12px;color:#888;margin-top:4px;">📍 ${escHtml(s.area||'')} ${escHtml(s.address||'')}</p>
+        <p style="font-size:11px;color:#aaa;">⭐ ${((s.score||0)/10).toFixed(1)} | 💰 ¥${s.avgPrice||'-'}/人</p>
+      </div>
+    `).join('')}
+  `;
+}
+
+function hideSearchResults() {
+  const el = document.getElementById('searchResults');
+  if (el) el.style.display = 'none';
+  searchKeyword = '';
+}
+
+// ==================== 分类过滤 ====================
+function filterByCategory(catName) {
+  if (activeCategory === catName) {
+    // 取消筛选，显示全部
+    activeCategory = null;
+    hideSearchResults();
+    renderPosts(allBlogs);
+    showToast('已显示全部');
+    document.querySelectorAll('.category-item').forEach(el => el.style.opacity = '1');
+    return;
+  }
+  activeCategory = catName;
+  hideSearchResults();
+
+  // 先获取分类下的商户 ID 列表，再过滤帖子
+  api.get('/shop/list', { params: { category: catName, city: currentCity } })
+    .then(res => {
+      if (res.data.code !== 200) return;
+      const shopIds = new Set((res.data.data || []).map(s => s.id));
+      const filtered = allBlogs.filter(b => shopIds.has(b.shopId) || shopIds.has(Number(b.shopId)));
+      renderPosts(filtered);
+
+      // 高亮分类
+      document.querySelectorAll('.category-item').forEach(el => {
+        const name = el.dataset.name;
+        el.style.opacity = (name === catName) ? '1' : '0.5';
+      });
+      showToast('分类：' + catName + (filtered.length === 0 ? '（暂无帖子）' : ''));
+    }).catch(() => showToast('加载失败'));
+}
+
+// ==================== 帖子详情跳转 ====================
+function goDetail(id) {
+  window.location.href = 'detail.html?id=' + id;
+}
+
+// ==================== 点赞（真实 API） ====================
+async function handleLike(e, blogId) {
+  e.stopPropagation();
+  try {
+    const res = await api.put('/blog/like/' + blogId);
+    if (res.data.code === 200) {
+      // 更新本地状态
+      const blog = allBlogs.find(b => b.id === blogId);
+      if (blog) {
+        blog.isLiked = !blog.isLiked;
+        blog.liked = (blog.liked || 0) + (blog.isLiked ? 1 : -1);
+      }
+      renderPosts(activeCategory ? allBlogs.filter(b =>
+        (b.shopName || '').includes(activeCategory)) : allBlogs);
+    } else if (res.data.code === 401) {
+      showToast('请先登录');
+    }
+  } catch (e) {
+    showToast('操作失败');
+  }
+}
+
+// ==================== 事件绑定 ====================
+function bindEvents() {
+  bindSearchEvents();
+
+  // 城市切换 - 打开选择器
+  const cityEl = document.querySelector('.top-bar-left');
+  if (cityEl) {
+    cityEl.onclick = openCityPicker;
+  }
 
   // 分类点击
   document.querySelectorAll('.category-item').forEach(item => {
     item.addEventListener('click', function () {
-      const category = this.dataset.category;
-      const name = this.dataset.name || this.querySelector('span').textContent;
-      showToast('分类' + name + ' — 功能开发中');
+      const name = this.dataset.name;
+      if (name) filterByCategory(name);
     });
   });
 
   // 搜索框点击
-  document.getElementById('searchBox').addEventListener('click', () => {
-    showToast('搜索功能开发中');
-  });
+  const searchBox = document.getElementById('searchBox');
+  if (searchBox) {
+    searchBox.addEventListener('click', () => {
+      const input = document.querySelector('.search-input');
+      if (input) input.focus();
+    });
+  }
 
-  // "更多"链接
-  document.getElementById('btnMore').addEventListener('click', () => {
-    showToast('更多精选笔记 — 功能开发中');
-  });
+  // "更多"按钮
+  const btnMore = document.getElementById('btnMore');
+  if (btnMore) {
+    btnMore.addEventListener('click', () => showToast('更多精选 — 开发中'));
+  }
 
-  // 底部 TabBar 点击 — 真实页面跳转
+  // 底部 TabBar
   document.querySelectorAll('.tab-item').forEach(tab => {
     tab.addEventListener('click', function () {
-      const tabName = this.dataset.tab;
-      if (tabName === 'home') return; // 当前已是首页
-
-      if (tabName === 'mine') {
-        // 跳转个人中心（带登录校验）
-        if (!localStorage.getItem('token')) {
-          window.location.href = 'login.html';
-        } else {
-          window.location.href = 'my.html';
-        }
-      } else {
-        const tabLabels = { map: '地图', message: '消息', mine: '我的' };
-        showToast((tabLabels[tabName] || tabName) + ' — 功能开发中');
+      const name = this.dataset.tab;
+      if (name === 'home') return;
+      if (name === 'mine') {
+        window.location.href = localStorage.getItem('token') ? 'my.html' : 'login.html';
+        return;
       }
+      showToast(({map:'地图',message:'消息'}[name]||name) + ' — 功能开发中');
     });
   });
 
-  // 城市切换
-  document.querySelector('.top-bar-left').addEventListener('click', () => {
-    showToast('城市切换功能开发中');
-  });
-});
+  // 城市选择器 - 点击遮罩关闭
+  const overlay = document.getElementById('cityPicker');
+  if (overlay) {
+    overlay.addEventListener('click', function(e) {
+      if (e.target === overlay) closeCityPicker();
+    });
+  }
 
-// ==================== 工具函数 ====================
-
-/** HTML 转义防 XSS */
-function escHtml(str) {
-  if (!str) return '';
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
+  // 通知图标
+  const notify = document.querySelector('.notification-icon');
+  if (notify) notify.parentElement.addEventListener('click', () => showToast('消息通知 — 开发中'));
 }
 
-/** 点赞数格式化（1000 → 1k） */
-function formatCount(n) {
-  if (n >= 10000) return (n / 10000).toFixed(1).replace(/\.0$/, '') + 'w';
-  if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
-  return String(n);
-}
-
-console.log('🏙️ 城市点评 首页已就绪 | 当前模拟帖子数：' + postList.length);
+// ---- 工具 ----
+function escHtml(s) { return s ? s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') : ''; }
+function fmtCount(n) { return n >= 10000 ? (n/10000).toFixed(1).replace(/\.0$/,'')+'w' : n >= 1000 ? (n/1000).toFixed(1).replace(/\.0$/,'')+'k' : String(n||0); }

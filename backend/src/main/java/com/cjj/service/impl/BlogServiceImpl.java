@@ -55,6 +55,9 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     private IUserService userService;
 
     @Resource
+    private com.cjj.service.IShopService shopService;
+
+    @Resource
     private IFollowService followService;
 
     /**
@@ -273,6 +276,11 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         if (user != null) {
             blog.setName(user.getNickName());
             blog.setIcon(user.getIcon());
+        }
+        // 关联商户名
+        com.cjj.entity.Shop shop = shopService.getById(blog.getShopId());
+        if (shop != null) {
+            blog.setShopName(shop.getName());
         }
         UserDTO me = UserHolder.getUser();
         if (me != null) {
