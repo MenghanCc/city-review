@@ -200,7 +200,7 @@ function showSearchResults(shops, keyword) {
 }
 
 function goShop(id) {
-  showToast('商户详情页开发中');
+  window.location.href = 'shop-detail.html?id=' + id;
 }
 
 function hideSearchResults() {

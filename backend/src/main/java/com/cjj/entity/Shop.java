@@ -99,6 +99,21 @@ public class Shop implements Serializable {
     private String openHours;
 
     /**
+     * 联系电话
+     */
+    private String phone;
+
+    /**
+     * 商户简介
+     */
+    private String description;
+
+    /**
+     * 封面图URL
+     */
+    private String coverImg;
+
+    /**
      * 创建时间
      */
     private LocalDateTime createTime;

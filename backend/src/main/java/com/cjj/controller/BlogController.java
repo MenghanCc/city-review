@@ -160,4 +160,20 @@ public class BlogController {
     public Result queryBlogById(@PathVariable("id") Long id) {
         return blogService.queryBlogById(id);
     }
+
+    /**
+     * 商户关联帖子（分页）
+     * GET /api/blog/shop/{shopId}?page=1&size=10
+     */
+    @GetMapping("/shop/{shopId}")
+    public Result listByShop(@PathVariable("shopId") Long shopId,
+                              @RequestParam(value = "page", defaultValue = "1") Integer page,
+                              @RequestParam(value = "size", defaultValue = "10") Integer size) {
+        Page<Blog> blogPage = blogService.getBaseMapper().selectPage(
+                new Page<>(page, size),
+                Wrappers.<Blog>lambdaQuery()
+                        .eq(Blog::getShopId, shopId)
+                        .orderByDesc(Blog::getCreateTime));
+        return Result.ok(blogPage.getRecords());
+    }
 }

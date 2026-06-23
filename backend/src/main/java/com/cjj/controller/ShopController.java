@@ -28,6 +28,15 @@ public class ShopController {
     @Resource
     private com.cjj.mapper.ShopTypeMapper shopTypeMapper;
 
+    @Resource
+    private com.cjj.mapper.BlogMapper blogMapper;
+
+    @Resource
+    private com.cjj.service.IUserService userService;
+
+    @Resource
+    private org.springframework.data.redis.core.StringRedisTemplate stringRedisTemplate;
+
     /**
      * 商户列表（强制城市过滤 + 可选分类/名称筛选）
      * GET /api/shop/list?city=武汉&category=美食&name=茶餐厅
@@ -66,9 +75,70 @@ public class ShopController {
         return Result.ok(shops);
     }
 
+    /**
+     * 商户详情（增强版：含分类名 + 关联帖子 + Redis 缓存 30 分钟）
+     */
     @GetMapping("/{id}")
     public Result queryShopById(@PathVariable("id") Long id) {
-        return shopService.queryById(id);
+        // 1. 查 Redis 缓存
+        String cacheKey = "shop:detail:" + id;
+        String cached = stringRedisTemplate.opsForValue().get(cacheKey);
+        if (cached != null && !cached.isEmpty()) {
+            return Result.ok(cn.hutool.json.JSONUtil.toBean(cached, java.util.Map.class));
+        }
+
+        // 2. 查 MySQL
+        Shop shop = shopService.getById(id);
+        if (shop == null) return Result.fail("商户不存在");
+
+        // 3. 组装数据
+        java.util.Map<String, Object> data = new java.util.HashMap<>();
+        data.put("id", shop.getId());
+        data.put("name", shop.getName());
+        data.put("city", shop.getCity());
+        data.put("address", shop.getAddress());
+        data.put("area", shop.getArea());
+        data.put("x", shop.getX());
+        data.put("y", shop.getY());
+        data.put("avgPrice", shop.getAvgPrice());
+        data.put("score", shop.getScore());
+        data.put("sold", shop.getSold());
+        data.put("openHours", shop.getOpenHours());
+        data.put("phone", shop.getPhone());
+        data.put("description", shop.getDescription());
+        data.put("coverImg", shop.getCoverImg());
+        data.put("images", shop.getImages());
+
+        // 分类名
+        com.cjj.entity.ShopType st = shopTypeMapper.selectById(shop.getTypeId());
+        data.put("categoryName", st != null ? st.getName() : "");
+        data.put("typeId", shop.getTypeId());
+
+        // 关联帖子（最新 5 篇）
+        java.util.List<com.cjj.entity.Blog> blogs = blogMapper.selectList(
+                Wrappers.<com.cjj.entity.Blog>lambdaQuery()
+                        .eq(com.cjj.entity.Blog::getShopId, id)
+                        .orderByDesc(com.cjj.entity.Blog::getCreateTime)
+                        .last("LIMIT 5"));
+        java.util.List<java.util.Map<String, Object>> blogList = new java.util.ArrayList<>();
+        for (com.cjj.entity.Blog b : blogs) {
+            java.util.Map<String, Object> bm = new java.util.HashMap<>();
+            bm.put("id", b.getId());
+            bm.put("title", b.getTitle());
+            bm.put("liked", b.getLiked());
+            bm.put("images", b.getImages());
+            com.cjj.entity.User u = userService.getById(b.getUserId());
+            bm.put("nickname", u != null ? u.getNickName() : "");
+            bm.put("avatar", u != null ? u.getIcon() : "");
+            blogList.add(bm);
+        }
+        data.put("blogs", blogList);
+
+        // 4. 写入 Redis 缓存（30 分钟）
+        stringRedisTemplate.opsForValue().set(cacheKey,
+                cn.hutool.json.JSONUtil.toJsonStr(data), 30, java.util.concurrent.TimeUnit.MINUTES);
+
+        return Result.ok(data);
     }
 
     @PostMapping
