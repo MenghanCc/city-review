@@ -11,13 +11,25 @@ import com.cjj.service.IUserInfoService;
 import com.cjj.service.IUserService;
 import com.cjj.utils.UserHolder;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpSession;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
+
+import static com.cjj.utils.RedisConstants.LOGIN_USER_KEY;
 
 import static com.cjj.utils.RedisConstants.FANS_KEY;
 import static com.cjj.utils.RedisConstants.FOLLOW_KEY;
@@ -49,6 +61,17 @@ public class UserController {
 
     @Resource
     private StringRedisTemplate stringRedisTemplate;
+
+    @Value("${file.upload-dir:uploads}")
+    private String uploadDir;
+
+    private Path getUploadPath() {
+        Path p = Paths.get(uploadDir, "avatars");
+        if (!p.isAbsolute()) {
+            p = Paths.get(System.getProperty("user.dir")).resolve(uploadDir).resolve("avatars");
+        }
+        return p;
+    }
 
     /**
      * 发送手机验证码
@@ -157,19 +180,25 @@ public class UserController {
      * 更新个人信息（昵称、性别、生日、所在地、简介）
      */
     @PutMapping("/profile")
-    public Result updateProfile(@RequestBody Map<String, String> body) {
+    public Result updateProfile(@RequestBody Map<String, String> body,
+                                 javax.servlet.http.HttpServletRequest request) {
         UserDTO me = UserHolder.getUser();
         if (me == null) {
             return Result.fail(401, "请先登录");
         }
         Long userId = me.getId();
+        String token = request.getHeader("Authorization");
 
-        // 1. 更新 User 表（昵称）
+        // 1. 更新 User 表（昵称）+ 同步 Redis
         if (body.containsKey("nickName")) {
             User user = userService.getById(userId);
             if (user != null) {
                 user.setNickName(body.get("nickName"));
                 userService.updateById(user);
+                // 同步 Redis Session
+                if (token != null && !token.isEmpty()) {
+                    stringRedisTemplate.opsForHash().put(LOGIN_USER_KEY + token, "nickName", body.get("nickName"));
+                }
             }
         }
 
@@ -194,5 +223,56 @@ public class UserController {
         userInfoService.saveOrUpdate(info);
 
         return Result.ok("更新成功");
+    }
+
+    /**
+     * 上传头像
+     * POST /api/user/avatar  (multipart/form-data, field: file)
+     * 保存图片 → 更新 User.icon → 同步 Redis Session
+     */
+    @PostMapping("/avatar")
+    public Result uploadAvatar(@RequestParam("file") MultipartFile file,
+                                javax.servlet.http.HttpServletRequest request) {
+        UserDTO me = UserHolder.getUser();
+        if (me == null) return Result.fail(401, "请先登录");
+        Long userId = me.getId();
+
+        if (file.isEmpty()) return Result.fail("请选择图片");
+        if (file.getSize() > 2 * 1024 * 1024) return Result.fail("头像不能超过 2MB");
+
+        try {
+            // 保存到 uploads/avatars/
+            Path dir = getUploadPath();
+            Files.createDirectories(dir);
+            String ext = ".jpg";
+            String original = file.getOriginalFilename();
+            if (original != null && original.contains(".")) {
+                ext = original.substring(original.lastIndexOf("."));
+            }
+            String fileName = "avatar_" + userId + "_" + UUID.randomUUID().toString().substring(0, 8) + ext;
+            Path filePath = dir.resolve(fileName);
+            file.transferTo(filePath.toFile());
+
+            String url = "/uploads/avatars/" + fileName;
+
+            // 更新 User 表
+            User user = userService.getById(userId);
+            if (user != null) {
+                user.setIcon(url);
+                userService.updateById(user);
+            }
+
+            // 同步 Redis Session
+            String token = request.getHeader("Authorization");
+            if (token != null && !token.isEmpty()) {
+                stringRedisTemplate.opsForHash().put(LOGIN_USER_KEY + token, "icon", url);
+            }
+
+            log.info("city-review 头像更新成功 → userId={}, url={}", userId, url);
+            return Result.ok(url);
+        } catch (Exception e) {
+            log.error("头像上传失败", e);
+            return Result.fail("上传失败: " + e.getClass().getSimpleName() + " - " + e.getMessage());
+        }
     }
 }

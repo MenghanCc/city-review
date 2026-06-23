@@ -2,13 +2,16 @@ package com.cjj.config;
 
 import com.cjj.utils.LoginInterceptor;
 import com.cjj.utils.RefreshTokenInterceptor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import javax.annotation.Resource;
+import java.io.File;
 
 /**
  * city-review MVC 配置
@@ -21,6 +24,20 @@ public class MvcConfig implements WebMvcConfigurer {
 
     @Resource
     private StringRedisTemplate stringRedisTemplate;
+
+    @Value("${file.upload-dir:./uploads}")
+    private String uploadDir;
+
+    /**
+     * 映射 /uploads/** 到本地目录，使上传的图片可直接通过 URL 访问
+     */
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        File dir = new File(uploadDir);
+        if (!dir.exists()) dir.mkdirs();
+        registry.addResourceHandler("/uploads/**")
+                .addResourceLocations("file:" + dir.getAbsolutePath() + "/");
+    }
 
     /**
      * 注册拦截器

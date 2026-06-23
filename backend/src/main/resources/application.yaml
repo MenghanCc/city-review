@@ -1,8 +1,17 @@
 server:
   port: 8081
+
+# 文件上传配置
+file:
+  upload-dir: ./uploads
+
 spring:
   application:
     name: city-review
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 20MB
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://127.0.0.1:3306/city_review?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
