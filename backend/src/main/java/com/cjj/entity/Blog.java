@@ -54,7 +54,7 @@ public class Blog implements Serializable {
      * 是否点赞过了
      */
     @TableField(exist = false)
-    private Boolean isLike;
+    private Boolean isLiked;
 
     /**
      * 关联商户名（非数据库字段）

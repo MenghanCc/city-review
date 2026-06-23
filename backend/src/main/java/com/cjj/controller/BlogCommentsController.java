@@ -18,11 +18,11 @@ public class BlogCommentsController {
     private BlogCommentsServiceImpl commentsService;
 
     /**
-     * 发表评论
+     * 发表评论（兼容旧接口，委托到新方法）
      */
     @PostMapping
     public Result saveComment(@RequestBody BlogComments comment) {
-        return commentsService.saveComment(comment);
+        return commentsService.saveComment(comment.getBlogId(), comment.getContent());
     }
 
     /**

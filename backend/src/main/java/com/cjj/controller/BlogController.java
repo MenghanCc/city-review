@@ -3,18 +3,22 @@ package com.cjj.controller;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cjj.dto.Result;
+import com.cjj.dto.UserDTO;
 import com.cjj.entity.Blog;
 import com.cjj.entity.Shop;
 import com.cjj.entity.User;
 import com.cjj.service.IShopService;
 import com.cjj.service.IUserService;
 import com.cjj.service.impl.BlogServiceImpl;
-import com.cjj.utils.SystemConstants;
+import com.cjj.utils.UserHolder;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static com.cjj.utils.RedisConstants.BLOG_LIKED_RANK_KEY;
 
 /**
  * city-review 探店笔记控制器
@@ -31,6 +35,9 @@ public class BlogController {
 
     @Resource
     private IShopService shopService;
+
+    @Resource
+    private StringRedisTemplate stringRedisTemplate;
 
     /**
      * 首页帖子流（城市过滤 + 分页 + 关联商户和用户）
@@ -90,6 +97,16 @@ public class BlogController {
             Shop shop = shopMap.get(blog.getShopId());
             m.put("shopId", blog.getShopId());
             m.put("shopName", shop != null ? shop.getName() : "未知商户");
+
+            // 当前用户是否已点赞
+            UserDTO me = UserHolder.getUser();
+            if (me != null) {
+                Double score = stringRedisTemplate.opsForZSet()
+                        .score(BLOG_LIKED_RANK_KEY + blog.getId(), me.getId().toString());
+                m.put("isLiked", score != null);
+            } else {
+                m.put("isLiked", false);
+            }
 
             return m;
         }).collect(Collectors.toList());

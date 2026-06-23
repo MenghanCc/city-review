@@ -109,7 +109,7 @@ function renderPosts(posts) {
       <p class="post-content">${escHtml(p.content || '')}</p>
       ${renderImages(p.images)}
       <div class="post-actions" onclick="event.stopPropagation()">
-        <div class="post-action" onclick="handleLike(event, ${p.id})">
+        <div class="post-action ${p.isLiked ? 'liked' : ''}" onclick="handleLike(event, ${p.id})">
           <i class="${p.isLiked ? 'fas' : 'far'} fa-heart"></i>
           <span>${fmtCount(p.liked || 0)}</span>
         </div>
@@ -222,18 +222,16 @@ function goDetail(id) {
 // ==================== 点赞（真实 API） ====================
 async function handleLike(e, blogId) {
   e.stopPropagation();
+  if (!localStorage.getItem('token')) { showToast('请先登录'); return; }
   try {
-    const res = await api.put('/blog/like/' + blogId);
+    var res = await api.put('/blog/like/' + blogId);
     if (res.data.code === 200) {
-      // 更新本地状态
-      const blog = allBlogs.find(b => b.id === blogId);
+      var blog = allBlogs.find(function(b) { return b.id === blogId; });
       if (blog) {
         blog.isLiked = !blog.isLiked;
         blog.liked = (blog.liked || 0) + (blog.isLiked ? 1 : -1);
       }
       renderPosts(allBlogs);
-    } else if (res.data.code === 401) {
-      showToast('请先登录');
     }
   } catch (e) {
     showToast('操作失败');

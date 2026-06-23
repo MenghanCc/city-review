@@ -213,7 +213,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
             // 判断当前用户是否已点赞
             Double score = stringRedisTemplate.opsForZSet()
                     .score(BLOG_LIKED_RANK_KEY + blog.getId(), userId.toString());
-            blog.setIsLike(score != null);
+            blog.setIsLiked(score != null);
         }
 
         ScrollResult scrollResult = new ScrollResult();
@@ -244,7 +244,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
             if (me != null) {
                 Double score = stringRedisTemplate.opsForZSet()
                         .score(BLOG_LIKED_RANK_KEY + blog.getId(), me.getId().toString());
-                blog.setIsLike(score != null);
+                blog.setIsLiked(score != null);
             }
         }
         return Result.ok(records);
@@ -286,7 +286,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         if (me != null) {
             Double score = stringRedisTemplate.opsForZSet()
                     .score(BLOG_LIKED_RANK_KEY + id, me.getId().toString());
-            blog.setIsLike(score != null);
+            blog.setIsLiked(score != null);
         }
         return Result.ok(blog);
     }
