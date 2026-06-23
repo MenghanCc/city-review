@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>城市点评 - 发现城市好去处</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="app">
+    <!-- ========== 顶部导航 ========== -->
+    <header class="top-bar">
+      <div class="top-bar-left">
+        <i class="fas fa-map-marker-alt location-icon"></i>
+        <span class="city-name">杭州</span>
+        <i class="fas fa-chevron-down arrow-down"></i>
+      </div>
+      <h1 class="top-bar-title">城市点评</h1>
+      <div class="top-bar-right">
+        <i class="far fa-bell notification-icon"></i>
+      </div>
+    </header>
+
+    <!-- ========== 搜索框 ========== -->
+    <div class="search-wrapper">
+      <div class="search-box" id="searchBox">
+        <i class="fas fa-search search-icon"></i>
+        <input type="text" class="search-input" placeholder="搜索商户、地点" readonly>
+      </div>
+    </div>
+
+    <!-- ========== 分类导航（10个分类，两行×5列） ========== -->
+    <nav class="category-nav">
+      <!-- 第一行 -->
+      <div class="category-item" data-category="1" data-name="美食">
+        <div class="category-icon food-bg">🍜</div>
+        <span>美食</span>
+      </div>
+      <div class="category-item" data-category="2" data-name="KTV">
+        <div class="category-icon ktv-bg">🎤</div>
+        <span>KTV</span>
+      </div>
+      <div class="category-item" data-category="3" data-name="丽人·美发">
+        <div class="category-icon beauty-bg">💇</div>
+        <span>丽人·美发</span>
+      </div>
+      <div class="category-item" data-category="10" data-name="美睫·美甲">
+        <div class="category-icon nail-bg">💅</div>
+        <span>美睫·美甲</span>
+      </div>
+      <div class="category-item" data-category="5" data-name="按摩·足疗">
+        <div class="category-icon massage-bg">🦶</div>
+        <span>按摩·足疗</span>
+      </div>
+    </nav>
+    <nav class="category-nav row2">
+      <!-- 第二行 -->
+      <div class="category-item" data-category="6" data-name="美容SPA">
+        <div class="category-icon spa-bg">💆</div>
+        <span>美容SPA</span>
+      </div>
+      <div class="category-item" data-category="7" data-name="亲子游乐">
+        <div class="category-icon kids-bg">🎠</div>
+        <span>亲子游乐</span>
+      </div>
+      <div class="category-item" data-category="8" data-name="酒吧">
+        <div class="category-icon bar-bg">🍺</div>
+        <span>酒吧</span>
+      </div>
+      <div class="category-item" data-category="9" data-name="轰趴馆">
+        <div class="category-icon party-bg">🎉</div>
+        <span>轰趴馆</span>
+      </div>
+      <div class="category-item" data-category="4" data-name="健身运动">
+        <div class="category-icon fitness-bg">🏋️</div>
+        <span>健身运动</span>
+      </div>
+    </nav>
+
+    <!-- ========== 精选推荐标题 ========== -->
+    <div class="feed-header">
+      <span class="feed-title">精选笔记</span>
+      <span class="feed-more" id="btnMore">更多 <i class="fas fa-angle-right"></i></span>
+    </div>
+
+    <!-- ========== 信息流（帖子列表） ========== -->
+    <main class="feed-list" id="feedList">
+      <!-- JS 动态渲染 -->
+    </main>
+
+    <!-- ========== 底部导航栏 ========== -->
+    <footer class="tab-bar">
+      <div class="tab-item active" data-tab="home">
+        <i class="fas fa-home"></i>
+        <span>首页</span>
+      </div>
+      <div class="tab-item" data-tab="map">
+        <i class="fas fa-map-marked-alt"></i>
+        <span>地图</span>
+      </div>
+      <div class="tab-item" data-tab="message">
+        <i class="far fa-comment-dots"></i>
+        <span>消息</span>
+      </div>
+      <div class="tab-item" data-tab="mine">
+        <i class="far fa-user"></i>
+        <span>我的</span>
+      </div>
+    </footer>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
