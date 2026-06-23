@@ -40,14 +40,15 @@ public class BlogController {
     private StringRedisTemplate stringRedisTemplate;
 
     /**
-     * 首页帖子流（城市过滤 + 分页 + 关联商户和用户）
-     * GET /api/blog/list?city=武汉&page=1&size=10
+     * 首页帖子流（城市过滤 + 分页 + 关联商户和用户 + 排序）
+     * GET /api/blog/list?city=武汉&page=1&size=10&sort=time|likes
      */
     @GetMapping("/list")
     public Result listBlogs(
             @RequestParam(value = "city", defaultValue = "武汉") String city,
             @RequestParam(value = "page", defaultValue = "1") Integer page,
-            @RequestParam(value = "size", defaultValue = "10") Integer size) {
+            @RequestParam(value = "size", defaultValue = "10") Integer size,
+            @RequestParam(value = "sort", defaultValue = "time") String sort) {
 
         // 1. 查出当前城市下的所有店铺 ID
         List<Long> cityShopIds = shopService.getBaseMapper().selectList(
@@ -62,12 +63,21 @@ public class BlogController {
             return Result.ok(empty);
         }
 
-        // 2. 只查这些店铺关联的笔记
-        Page<Blog> blogPage = blogService.getBaseMapper().selectPage(
-                new Page<>(page, size),
-                Wrappers.<Blog>lambdaQuery()
-                        .in(Blog::getShopId, cityShopIds)
-                        .orderByDesc(Blog::getCreateTime));
+        // 2. 只查这些店铺关联的笔记，支持按时间/点赞排序
+        Page<Blog> blogPage;
+        if ("likes".equals(sort)) {
+            blogPage = blogService.getBaseMapper().selectPage(
+                    new Page<>(page, size),
+                    Wrappers.<Blog>lambdaQuery()
+                            .in(Blog::getShopId, cityShopIds)
+                            .orderByDesc(Blog::getLiked));
+        } else {
+            blogPage = blogService.getBaseMapper().selectPage(
+                    new Page<>(page, size),
+                    Wrappers.<Blog>lambdaQuery()
+                            .in(Blog::getShopId, cityShopIds)
+                            .orderByDesc(Blog::getCreateTime));
+        }
 
         // 3. 批量预加载用户和店铺（减少 N+1）
         Set<Long> userIds = new HashSet<>();

@@ -222,6 +222,27 @@ body {
   cursor: pointer;
 }
 
+/* 排序切换栏 */
+.sort-bar {
+  display: flex;
+  gap: 10px;
+  padding: 0 12px 10px;
+}
+.sort-item {
+  font-size: 13px;
+  color: #999;
+  padding: 4px 14px;
+  border-radius: 14px;
+  background: #F5F5F5;
+  cursor: pointer;
+  transition: all .2s;
+}
+.sort-item.active {
+  color: #FFF;
+  background: var(--orange);
+  font-weight: 600;
+}
+
 /* ==================== 帖子卡片 ==================== */
 .feed-list {
   padding: 0 12px;

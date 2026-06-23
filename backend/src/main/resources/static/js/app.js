@@ -8,6 +8,7 @@ if (!currentCity) { currentCity = '武汉'; localStorage.setItem('city', '武汉
 let searchKeyword = '';
 let searchTimer = null;
 let allBlogs = [];
+let currentSort = 'time';  // 'time' | 'likes'
 
 // 国内城市列表
 const CITY_LIST = [
@@ -76,7 +77,7 @@ async function loadPosts() {
   if (container) container.innerHTML = '<p style="text-align:center;padding:40px 0;color:#999;">加载中...</p>';
 
   try {
-    const res = await api.get('/blog/list', { params: { city: currentCity, page: 1, size: 5 } });
+    const res = await api.get('/blog/list', { params: { city: currentCity, page: 1, size: 5, sort: currentSort } });
     if (res.data.code === 200 && res.data.data) {
       allBlogs = res.data.data.records || [];
     }
@@ -236,6 +237,17 @@ async function handleLike(e, blogId) {
   } catch (e) {
     showToast('操作失败');
   }
+}
+
+// ==================== 排序切换 ====================
+function switchSort(sort) {
+  if (currentSort === sort) return;
+  currentSort = sort;
+  // 更新 UI
+  document.querySelectorAll('.sort-item').forEach(function(el) {
+    el.classList.toggle('active', el.dataset.sort === sort);
+  });
+  loadPosts();
 }
 
 // ==================== 事件绑定 ====================

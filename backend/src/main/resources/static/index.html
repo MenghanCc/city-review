@@ -87,6 +87,12 @@
       <span class="feed-more" id="btnMore">更多 <i class="fas fa-angle-right"></i></span>
     </div>
 
+    <!-- 排序切换 -->
+    <div class="sort-bar" id="sortBar">
+      <span class="sort-item active" data-sort="time" onclick="switchSort('time')">🕐 最新</span>
+      <span class="sort-item" data-sort="likes" onclick="switchSort('likes')">🔥 最热</span>
+    </div>
+
     <!-- ========== 信息流（帖子列表） ========== -->
     <main class="feed-list" id="feedList">
       <!-- JS 动态渲染 -->
