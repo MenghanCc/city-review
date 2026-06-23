@@ -179,7 +179,7 @@ public class BlogController {
     }
 
     /**
-     * 商户关联帖子（分页）
+     * 商户关联帖子（分页，含用户信息）
      * GET /api/blog/shop/{shopId}?page=1&size=10
      */
     @GetMapping("/shop/{shopId}")
@@ -191,6 +191,47 @@ public class BlogController {
                 Wrappers.<Blog>lambdaQuery()
                         .eq(Blog::getShopId, shopId)
                         .orderByDesc(Blog::getCreateTime));
-        return Result.ok(blogPage.getRecords());
+
+        // 批量预加载用户信息
+        Set<Long> userIds = blogPage.getRecords().stream()
+                .map(Blog::getUserId).collect(Collectors.toSet());
+        Map<Long, User> userMap = userService.listByIds(userIds).stream()
+                .collect(Collectors.toMap(User::getId, u -> u));
+
+        // 检查当前用户点赞状态
+        UserDTO me = UserHolder.getUser();
+
+        List<Map<String, Object>> enriched = blogPage.getRecords().stream().map(blog -> {
+            Map<String, Object> m = new HashMap<>();
+            m.put("id", blog.getId());
+            m.put("shopId", blog.getShopId());
+            m.put("title", blog.getTitle());
+            m.put("content", blog.getContent());
+            m.put("images", blog.getImages());
+            m.put("liked", blog.getLiked());
+            m.put("comments", blog.getComments());
+            m.put("score", blog.getScore());
+            m.put("createTime", blog.getCreateTime());
+
+            User u = userMap.get(blog.getUserId());
+            m.put("name", u != null ? u.getNickName() : "匿名");
+            m.put("icon", u != null ? u.getIcon() : "");
+
+            if (me != null) {
+                Double score = stringRedisTemplate.opsForZSet()
+                        .score(BLOG_LIKED_RANK_KEY + blog.getId(), me.getId().toString());
+                m.put("isLiked", score != null);
+            } else {
+                m.put("isLiked", false);
+            }
+
+            return m;
+        }).collect(Collectors.toList());
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("records", enriched);
+        result.put("total", blogPage.getTotal());
+        result.put("pages", blogPage.getPages());
+        return Result.ok(result);
     }
 }

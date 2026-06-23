@@ -101,10 +101,13 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
             return Result.fail("发布失败");
         }
 
-        // 更新商户平均评分：基于该商户所有帖子的评分计算平均值
+        // 更新商户平均评分
         if (blog.getScore() != null) {
             updateShopAvgScore(blog.getShopId());
         }
+
+        // 清除商户详情缓存，让"大家说"展示最新帖子
+        stringRedisTemplate.delete("shop:detail:" + blog.getShopId());
 
         // --- 推模式 Feed 流：推送到所有粉丝的收件箱 ---
         String fansKey = FANS_KEY + user.getId();
