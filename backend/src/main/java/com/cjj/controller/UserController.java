@@ -1,19 +1,26 @@
 package com.cjj.controller;
 
-
 import com.cjj.dto.LoginFormDTO;
 import com.cjj.dto.Result;
 import com.cjj.dto.UserDTO;
 import com.cjj.entity.User;
 import com.cjj.entity.UserInfo;
+import com.cjj.service.IFollowService;
+import com.cjj.service.ISignService;
 import com.cjj.service.IUserInfoService;
 import com.cjj.service.IUserService;
 import com.cjj.utils.UserHolder;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpSession;
+import java.util.HashMap;
+import java.util.Map;
+
+import static com.cjj.utils.RedisConstants.FANS_KEY;
+import static com.cjj.utils.RedisConstants.FOLLOW_KEY;
 
 /**
  * <p>
@@ -34,6 +41,15 @@ public class UserController {
     @Resource
     private IUserInfoService userInfoService;
 
+    @Resource
+    private IFollowService followService;
+
+    @Resource
+    private ISignService signService;
+
+    @Resource
+    private StringRedisTemplate stringRedisTemplate;
+
     /**
      * 发送手机验证码
      */
@@ -51,16 +67,6 @@ public class UserController {
     public Result login(@RequestBody LoginFormDTO loginForm, HttpSession session){
         // 实现登录功能
         return userService.login(loginForm, session);
-    }
-
-    /**
-     * 登出功能
-     * @return 无
-     */
-    @PostMapping("/logout")
-    public Result logout(){
-        // TODO 实现登出功能
-        return Result.fail("功能未完成");
     }
 
     @GetMapping("/me")
@@ -82,5 +88,111 @@ public class UserController {
         info.setUpdateTime(null);
         // 返回
         return Result.ok(info);
+    }
+
+    /**
+     * 退出登录（清除 Redis Token）
+     */
+    @PostMapping("/logout")
+    public Result doLogout(@RequestHeader(value = "Authorization", required = false) String token) {
+        if (token != null && !token.isEmpty()) {
+            stringRedisTemplate.delete(com.cjj.utils.RedisConstants.LOGIN_USER_KEY + token);
+        }
+        UserHolder.removeUser();
+        return Result.ok("已退出");
+    }
+
+    /**
+     * 用户统计数据（关注数、粉丝数、获赞数）
+     */
+    @GetMapping("/statistics")
+    public Result statistics() {
+        UserDTO user = UserHolder.getUser();
+        if (user == null) {
+            return Result.fail(401, "请先登录");
+        }
+        Long userId = user.getId();
+
+        // 关注数（Redis Set SCARD）
+        Long followCount = stringRedisTemplate.opsForSet().size(FOLLOW_KEY + userId);
+        // 粉丝数（Redis Set SCARD）
+        Long fansCount = stringRedisTemplate.opsForSet().size(FANS_KEY + userId);
+        // 获赞数（TODO: 从探店笔记聚合，暂无则返回 0）
+        Long likeCount = 0L;
+
+        Map<String, Long> data = new HashMap<>();
+        data.put("followCount", followCount == null ? 0 : followCount);
+        data.put("fansCount", fansCount == null ? 0 : fansCount);
+        data.put("likeCount", likeCount);
+        return Result.ok(data);
+    }
+
+    /**
+     * 签到（Redis BitMap）
+     * Key: sign:{userId}:{yyyyMM}
+     * offset: 当月第几天 - 1
+     */
+    @PostMapping("/sign")
+    public Result sign() {
+        return signService.sign();
+    }
+
+    /**
+     * 查询连续签到天数
+     */
+    @GetMapping("/sign/count")
+    public Result signCount() {
+        return signService.signCount();
+    }
+
+    /**
+     * 签到日历
+     */
+    @GetMapping("/sign/calendar")
+    public Result signCalendar() {
+        return signService.signCalendar();
+    }
+
+    /**
+     * 更新个人信息（昵称、性别、生日、所在地、简介）
+     */
+    @PutMapping("/profile")
+    public Result updateProfile(@RequestBody Map<String, String> body) {
+        UserDTO me = UserHolder.getUser();
+        if (me == null) {
+            return Result.fail(401, "请先登录");
+        }
+        Long userId = me.getId();
+
+        // 1. 更新 User 表（昵称）
+        if (body.containsKey("nickName")) {
+            User user = userService.getById(userId);
+            if (user != null) {
+                user.setNickName(body.get("nickName"));
+                userService.updateById(user);
+            }
+        }
+
+        // 2. 更新 UserInfo 表（所在地、性别、生日、简介）
+        UserInfo info = userInfoService.getById(userId);
+        if (info == null) {
+            info = new UserInfo();
+            info.setUserId(userId);
+        }
+        if (body.containsKey("city")) info.setCity(body.get("city"));
+        if (body.containsKey("gender")) {
+            String g = body.get("gender");
+            if (g != null && !g.isEmpty()) info.setGender("1".equals(g) || "女".equals(g));
+            else info.setGender(null);
+        }
+        if (body.containsKey("birthday")) {
+            String b = body.get("birthday");
+            if (b != null && !b.isEmpty()) info.setBirthday(java.time.LocalDate.parse(b));
+            else info.setBirthday(null);
+        }
+        if (body.containsKey("introduce")) info.setIntroduce(body.get("introduce"));
+        userInfoService.saveOrUpdate(info);
+
+        return Result.ok("更新成功");
     }
 }

@@ -142,7 +142,7 @@ function renderPosts() {
 function handlePostClick(id) {
   const post = postList.find(p => p.id === id);
   console.log('📝 帖子详情 JSON：', JSON.stringify(post, null, 2));
-  alert(`跳转至详情页：ID=${id}\n标题：${post.title}\n\n请查看浏览器控制台获取完整 JSON 数据`);
+  showToast('跳转至详情页：' + post.title);
 }
 
 /** 点赞 / 取消点赞 */
@@ -163,7 +163,7 @@ function handleLike(id) {
 
 /** 分享 */
 function handleShare(id) {
-  alert('分享功能开发中...');
+  showToast('分享功能开发中');
   console.log(`📤 分享帖子 ID=${id}`);
 }
 
@@ -177,45 +177,43 @@ document.addEventListener('DOMContentLoaded', () => {
     item.addEventListener('click', function () {
       const category = this.dataset.category;
       const name = this.dataset.name || this.querySelector('span').textContent;
-      alert(`跳转分类列表：${name}\n分类ID：${category}\n\n功能开发中，敬请期待～`);
+      showToast('分类' + name + ' — 功能开发中');
     });
   });
 
   // 搜索框点击
   document.getElementById('searchBox').addEventListener('click', () => {
-    alert('搜索功能开发中，敬请期待～');
+    showToast('搜索功能开发中');
   });
 
   // "更多"链接
   document.getElementById('btnMore').addEventListener('click', () => {
-    alert('查看更多精选笔记\n功能开发中，敬请期待～');
+    showToast('更多精选笔记 — 功能开发中');
   });
 
-  // 底部 TabBar 点击
+  // 底部 TabBar 点击 — 真实页面跳转
   document.querySelectorAll('.tab-item').forEach(tab => {
     tab.addEventListener('click', function () {
       const tabName = this.dataset.tab;
-      if (tabName === 'home') return; // 当前页面
+      if (tabName === 'home') return; // 当前已是首页
 
-      // 移除所有 active
-      document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
-      // 高亮当前（仅视觉反馈）
-      this.classList.add('active');
-
-      const tabLabels = { map: '地图', message: '消息', mine: '我的' };
-      alert(`${tabLabels[tabName] || tabName} — 功能开发中...`);
-
-      // 恢复首页高亮
-      setTimeout(() => {
-        document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
-        document.querySelector('.tab-item[data-tab="home"]').classList.add('active');
-      }, 1000);
+      if (tabName === 'mine') {
+        // 跳转个人中心（带登录校验）
+        if (!localStorage.getItem('token')) {
+          window.location.href = 'login.html';
+        } else {
+          window.location.href = 'my.html';
+        }
+      } else {
+        const tabLabels = { map: '地图', message: '消息', mine: '我的' };
+        showToast((tabLabels[tabName] || tabName) + ' — 功能开发中');
+      }
     });
   });
 
   // 城市切换
   document.querySelector('.top-bar-left').addEventListener('click', () => {
-    alert('城市切换功能开发中，敬请期待～');
+    showToast('城市切换功能开发中');
   });
 });
 

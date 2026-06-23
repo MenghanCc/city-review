@@ -1,1 +1,0 @@
-import{i as g}from"./index-izTAx7EZ.js";const e=o=>g.put(`/blog/like/${o}`),l=(o,s=5)=>g.get(`/blog/likes/${o}`,{params:{top:s}}),a=(o=1)=>g.get("/blog/hot",{params:{current:o}}),r=(o=1)=>g.get("/blog/of/me",{params:{current:o}}),b=(o,s=0)=>g.get("/blog/of/follow",{params:{max:o,offset:s}}),c=o=>g.get(`/blog/${o}`);export{b as a,r as b,c,l as d,a as g,e as l};

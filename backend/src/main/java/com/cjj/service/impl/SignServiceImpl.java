@@ -137,11 +137,15 @@ public class SignServiceImpl extends ServiceImpl<SignMapper, Sign> implements IS
         long bitField = result == null || result.isEmpty() || result.get(0) == null
                 ? 0 : result.get(0);
 
-        // 将位图展开为每日状态列表
+        // BITFIELD GET u{N} 0 返回的整数中：
+        //   MSB（最高位）= Redis offset 0 = 第1天
+        //   LSB（最低位）= Redis offset N-1 = 第N天
+        // 因此需要从高位向低位依次读取，而非从 LSB 遍历
         List<Integer> calendar = new ArrayList<>(daysInMonth);
         for (int i = 1; i <= daysInMonth; i++) {
-            calendar.add((bitField & 1) == 1 ? 1 : 0);
-            bitField >>>= 1;
+            int bitPos = daysInMonth - i;  // 第i天对应位图中的位置
+            int signed = ((bitField >>> bitPos) & 1) == 1 ? 1 : 0;
+            calendar.add(signed);
         }
 
         // 额外返回连续签到天数和本月签到总数供前端展示

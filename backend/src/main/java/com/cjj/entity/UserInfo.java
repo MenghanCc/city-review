@@ -30,7 +30,7 @@ public class UserInfo implements Serializable {
     /**
      * 主键，用户id
      */
-    @TableId(value = "user_id", type = IdType.AUTO)
+    @TableId(value = "user_id", type = IdType.INPUT)  // user_id 为手动赋值，非自增
     private Long userId;
 
     /**
