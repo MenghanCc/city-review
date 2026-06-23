@@ -58,6 +58,7 @@ public class MvcConfig implements WebMvcConfigurer {
                         "/api/user/code",          // 发送验证码
                         "/api/user/login",         // 登录
                         "/api/shop/**",            // 商户查询（公开）
+                        "/api/shops/**",           // 附近商户（公开）
                         "/api/shop-type/**",       // 商户类型（公开）
                         "/api/voucher/list/**",    // 优惠券列表（公开）
                         "/api/blog/hot",           // 热门笔记（公开）

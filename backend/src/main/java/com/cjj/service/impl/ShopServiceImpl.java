@@ -15,6 +15,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -50,6 +51,23 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
 
     @Resource
     private CacheClient cacheClient;
+
+    /**
+     * 启动时自动将商户坐标加载到 Redis GEO
+     */
+    @PostConstruct
+    public void initGeoData() {
+        try {
+            if (Boolean.TRUE.equals(stringRedisTemplate.hasKey(SHOP_GEO_KEY))) {
+                log.info("city-review GEO 数据已存在，跳过初始化");
+                return;
+            }
+            loadAllShopsToGeo();
+            log.info("city-review GEO 初始化完成");
+        } catch (Exception e) {
+            log.warn("city-review GEO 初始化失败（Redis 未就绪），将延迟加载", e);
+        }
+    }
 
     // ==================== 缓存查询 ====================
 

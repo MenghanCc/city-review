@@ -294,7 +294,11 @@ function bindEvents() {
         window.location.href = localStorage.getItem('token') ? 'my.html' : 'login.html';
         return;
       }
-      showToast(({map:'地图',message:'消息'}[name]||name) + ' — 功能开发中');
+      if (name === 'map') {
+        window.location.href = 'map.html';
+        return;
+      }
+      showToast(({message:'消息'}[name]||name) + ' — 功能开发中');
     });
   });
 
