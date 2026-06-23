@@ -99,7 +99,7 @@ function renderPosts(posts) {
   container.innerHTML = posts.map(p => `
     <article class="post-card" onclick="goDetail(${p.id})">
       <div class="post-header">
-        <img class="post-avatar" src="${p.avatar || 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2250%22 fill=%22%23EEE%22/></svg>'}" alt="" loading="lazy">
+        <img class="post-avatar" src="${p.avatar || '/imgs/default-avatar.svg'}" onerror="this.src='/imgs/default-avatar.svg'" alt="" loading="lazy">
         <div class="post-user-info">
           <div class="post-nickname">${escHtml(p.nickname || '匿名')}</div>
           <div class="post-shop"><i class="fas fa-store"></i> ${escHtml(p.shopName || '未知商户')}</div>
