@@ -142,11 +142,12 @@ body {
   justify-content: space-around;
   padding: 16px 10px 4px;
   background: var(--white);
-  margin-top: 1px;
+  margin-top: 8px;
 }
 
 .category-nav.row2 {
   padding: 4px 10px 16px;
+  margin-top: 0;
 }
 
 .category-item {
@@ -418,6 +419,43 @@ body {
     height: 44px;
     font-size: 22px;
   }
+}
+
+/* ==================== 搜索结果 ==================== */
+#searchResults {
+  background: var(--white);
+  border-top: 1px solid #F0F0F0;
+  max-height: 320px;
+  overflow-y: auto;
+  padding-bottom: 8px;
+}
+
+#searchResults .result-item {
+  padding: 12px 16px;
+  border-bottom: 1px solid #F5F5F5;
+  cursor: pointer;
+  transition: background .15s;
+}
+
+#searchResults .result-item:active { background: #FAFAFA; }
+
+#searchResults .result-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--dark-text);
+}
+
+#searchResults .result-meta {
+  font-size: 12px;
+  color: #999;
+  margin-top: 3px;
+}
+
+#searchResults .result-empty {
+  padding: 24px 16px;
+  text-align: center;
+  color: #AAA;
+  font-size: 13px;
 }
 
 /* ==================== Toast 轻提示 ==================== */

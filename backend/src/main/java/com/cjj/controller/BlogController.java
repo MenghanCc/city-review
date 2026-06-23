@@ -33,16 +33,44 @@ public class BlogController {
     private IShopService shopService;
 
     /**
-     * 首页帖子流（分页 + 关联商户和用户信息）
-     * GET /api/blog/list?page=1&size=10
+     * 首页帖子流（城市过滤 + 分页 + 关联商户和用户）
+     * GET /api/blog/list?city=武汉&page=1&size=10
      */
     @GetMapping("/list")
     public Result listBlogs(
+            @RequestParam(value = "city", defaultValue = "武汉") String city,
             @RequestParam(value = "page", defaultValue = "1") Integer page,
             @RequestParam(value = "size", defaultValue = "10") Integer size) {
+
+        // 1. 查出当前城市下的所有店铺 ID
+        List<Long> cityShopIds = shopService.getBaseMapper().selectList(
+                Wrappers.<Shop>lambdaQuery().eq(Shop::getCity, city).select(Shop::getId))
+                .stream().map(Shop::getId).collect(Collectors.toList());
+
+        if (cityShopIds.isEmpty()) {
+            Map<String, Object> empty = new HashMap<>();
+            empty.put("records", Collections.emptyList());
+            empty.put("total", 0);
+            empty.put("pages", 0);
+            return Result.ok(empty);
+        }
+
+        // 2. 只查这些店铺关联的笔记
         Page<Blog> blogPage = blogService.getBaseMapper().selectPage(
                 new Page<>(page, size),
-                Wrappers.<Blog>lambdaQuery().orderByDesc(Blog::getCreateTime));
+                Wrappers.<Blog>lambdaQuery()
+                        .in(Blog::getShopId, cityShopIds)
+                        .orderByDesc(Blog::getCreateTime));
+
+        // 3. 批量预加载用户和店铺（减少 N+1）
+        Set<Long> userIds = new HashSet<>();
+        Set<Long> shopIds = new HashSet<>();
+        blogPage.getRecords().forEach(b -> { userIds.add(b.getUserId()); shopIds.add(b.getShopId()); });
+
+        Map<Long, User> userMap = userService.listByIds(userIds).stream()
+                .collect(Collectors.toMap(User::getId, u -> u));
+        Map<Long, Shop> shopMap = shopService.listByIds(shopIds).stream()
+                .collect(Collectors.toMap(Shop::getId, s -> s));
 
         List<Map<String, Object>> enriched = blogPage.getRecords().stream().map(blog -> {
             Map<String, Object> m = new HashMap<>();
@@ -54,14 +82,12 @@ public class BlogController {
             m.put("comments", blog.getComments());
             m.put("createTime", blog.getCreateTime());
 
-            // 关联用户
-            User user = userService.getById(blog.getUserId());
+            User user = userMap.get(blog.getUserId());
             m.put("userId", blog.getUserId());
             m.put("nickname", user != null ? user.getNickName() : "匿名");
             m.put("avatar", user != null ? user.getIcon() : "");
 
-            // 关联商户
-            Shop shop = shopService.getById(blog.getShopId());
+            Shop shop = shopMap.get(blog.getShopId());
             m.put("shopId", blog.getShopId());
             m.put("shopName", shop != null ? shop.getName() : "未知商户");
 

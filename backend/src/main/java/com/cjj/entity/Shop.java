@@ -59,6 +59,11 @@ public class Shop implements Serializable {
     private String address;
 
     /**
+     * 所属城市
+     */
+    private String city;
+
+    /**
      * 经度
      */
     private Double x;

@@ -25,34 +25,39 @@ public class ShopController {
     @Resource
     public IShopService shopService;
 
+    @Resource
+    private com.cjj.mapper.ShopTypeMapper shopTypeMapper;
+
     /**
-     * 商户列表（支持城市/分类/名称筛选）
-     * GET /api/shop/list?city=杭州&category=美食&name=茶餐厅
+     * 商户列表（强制城市过滤 + 可选分类/名称筛选）
+     * GET /api/shop/list?city=武汉&category=美食&name=茶餐厅
      */
     @GetMapping("/list")
     public Result listShops(
-            @RequestParam(value = "city", required = false) String city,
+            @RequestParam(value = "city", defaultValue = "武汉") String city,
             @RequestParam(value = "category", required = false) String category,
             @RequestParam(value = "name", required = false) String name) {
 
-        if (city != null && !city.isEmpty()) {
-            log.info("city-review 当前城市：{}", city);
-            // 模拟城市过滤的网络延迟
-            try { Thread.sleep(200); } catch (InterruptedException ignored) {}
-        }
+        log.info("city-review 查询商户 → 城市={}, 分类={}, 名称={}", city, category, name);
 
         LambdaQueryWrapper<Shop> wrapper = Wrappers.<Shop>lambdaQuery();
-        // 按分类ID筛选（通过分类名匹配 tb_shop_type.name）
+        // 城市必过滤
+        wrapper.eq(Shop::getCity, city);
+
+        // 分类名 → type_id
         if (category != null && !category.isEmpty()) {
-            // 先通过分类名查 type_id，再过滤
-            List<Long> typeIds = shopService.getBaseMapper().selectList(null).stream()
-                    .filter(s -> s.getTypeId() != null)
-                    .map(Shop::getTypeId).distinct()
-                    .collect(java.util.stream.Collectors.toList());
-            wrapper.in(Shop::getTypeId, typeIds.isEmpty() ? java.util.Collections.singletonList(-1L) : typeIds);
+            com.cjj.entity.ShopType st = shopTypeMapper.selectOne(
+                    Wrappers.<com.cjj.entity.ShopType>lambdaQuery()
+                            .eq(com.cjj.entity.ShopType::getName, category));
+            if (st != null) {
+                wrapper.eq(Shop::getTypeId, st.getId());
+            } else {
+                // 无此分类，返回空
+                return Result.ok(java.util.Collections.emptyList());
+            }
         }
-        // 动态处理：实际上这里需要联表查 tb_shop_type
-        // 简化处理：直接按名称模糊搜索
+
+        // 名称模糊搜索
         if (name != null && !name.isEmpty()) {
             wrapper.like(Shop::getName, name);
         }

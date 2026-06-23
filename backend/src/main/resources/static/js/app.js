@@ -3,15 +3,15 @@
    ============================================================ */
 
 // ---- 全局状态 ----
-let currentCity = localStorage.getItem('city') || '杭州';
-let activeCategory = null;
+let currentCity = localStorage.getItem('city');
+if (!currentCity) { currentCity = '武汉'; localStorage.setItem('city', '武汉'); }
 let searchKeyword = '';
 let searchTimer = null;
 let allBlogs = [];
 
 // 国内城市列表
 const CITY_LIST = [
-  { group: '热门', cities: ['北京','上海','广州','深圳','杭州','成都','武汉','南京','重庆','西安','长沙','苏州'] },
+  { group: '热门', cities: ['武汉','北京','上海','杭州','广州','深圳','成都','南京','重庆','西安','长沙','苏州'] },
   { group: '华东', cities: ['上海','杭州','南京','苏州','宁波','无锡','合肥','济南','青岛','厦门','福州','南昌'] },
   { group: '华北', cities: ['北京','天津','石家庄','太原','呼和浩特'] },
   { group: '华南', cities: ['广州','深圳','东莞','佛山','南宁','海口','珠海'] },
@@ -64,19 +64,24 @@ function selectCity(city) {
   renderCity();
   closeCityPicker();
   buildCityPicker();
+  hideSearchResults();
   showToast('已切换到 ' + city);
   loadPosts();
 }
 
 // ==================== 数据加载（API） ====================
 async function loadPosts() {
+  allBlogs = [];
+  const container = document.getElementById('feedList');
+  if (container) container.innerHTML = '<p style="text-align:center;padding:40px 0;color:#999;">加载中...</p>';
+
   try {
-    const res = await api.get('/blog/list', { params: { page: 1, size: 20 } });
+    const res = await api.get('/blog/list', { params: { city: currentCity, page: 1, size: 5 } });
     if (res.data.code === 200 && res.data.data) {
       allBlogs = res.data.data.records || [];
     }
   } catch (e) {
-    console.warn('帖子加载失败，使用本地数据', e);
+    console.warn('帖子加载失败', e);
   }
   renderPosts(allBlogs);
 }
@@ -121,7 +126,7 @@ function renderImages(imagesStr) {
   if (!imagesStr) return '';
   const imgs = imagesStr.split(',').filter(Boolean);
   if (imgs.length === 0) return '';
-  return `<div class="post-images">${imgs.map(u => `<img class="post-image-item" src="${u}" loading="lazy" onerror="this.style.display='none'">`).join('')}</div>`;
+  return `<div class="post-images">${imgs.map(u => `<img class="post-image-item" src="${u}" loading="lazy" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22120%22 height=%22120%22%3E%3Crect fill=%22%23F0F0F0%22 width=%22120%22 height=%22120%22/%3E%3Ctext x=%2260%22 y=%2270%22 text-anchor=%22middle%22 font-size=%2240%22%3E🖼%3C/text%3E%3C/svg%3E'">`).join('')}</div>`;
 }
 
 // ==================== 搜索（防抖） ====================
@@ -183,19 +188,19 @@ function showSearchResults(shops, keyword) {
 
   el.style.display = 'block';
   if (shops.length === 0) {
-    el.innerHTML = `<div style="padding:16px;text-align:center;color:#999;">未找到与"${escHtml(keyword)}"相关的商户</div>`;
+    el.innerHTML = '<div class="result-empty">未找到与"' + escHtml(keyword) + '"相关的商户</div>';
     return;
   }
-  el.innerHTML = `
-    <div style="padding:8px 16px;font-size:12px;color:#999;">搜索结果（${shops.length}）</div>
-    ${shops.map(s => `
-      <div class="card" style="margin:8px 12px;padding:12px;cursor:pointer" onclick="window.location.href='shop.html?id=${s.id}'">
-        <b>${escHtml(s.name)}</b>
-        <p style="font-size:12px;color:#888;margin-top:4px;">📍 ${escHtml(s.area||'')} ${escHtml(s.address||'')}</p>
-        <p style="font-size:11px;color:#aaa;">⭐ ${((s.score||0)/10).toFixed(1)} | 💰 ¥${s.avgPrice||'-'}/人</p>
-      </div>
-    `).join('')}
-  `;
+  el.innerHTML = shops.map(s =>
+    '<div class="result-item" onclick="goShop(' + s.id + ')">' +
+      '<div class="result-name">' + escHtml(s.name) + '</div>' +
+      '<div class="result-meta">📍 ' + escHtml(s.area||'') + ' ' + escHtml(s.address||'') + ' &nbsp;|&nbsp; ⭐' + ((s.score||0)/10).toFixed(1) + ' &nbsp;|&nbsp; 💰¥' + (s.avgPrice||'-') + '/人</div>' +
+    '</div>'
+  ).join('');
+}
+
+function goShop(id) {
+  showToast('商户详情页开发中');
 }
 
 function hideSearchResults() {
@@ -204,35 +209,9 @@ function hideSearchResults() {
   searchKeyword = '';
 }
 
-// ==================== 分类过滤 ====================
-function filterByCategory(catName) {
-  if (activeCategory === catName) {
-    // 取消筛选，显示全部
-    activeCategory = null;
-    hideSearchResults();
-    renderPosts(allBlogs);
-    showToast('已显示全部');
-    document.querySelectorAll('.category-item').forEach(el => el.style.opacity = '1');
-    return;
-  }
-  activeCategory = catName;
-  hideSearchResults();
-
-  // 先获取分类下的商户 ID 列表，再过滤帖子
-  api.get('/shop/list', { params: { category: catName, city: currentCity } })
-    .then(res => {
-      if (res.data.code !== 200) return;
-      const shopIds = new Set((res.data.data || []).map(s => s.id));
-      const filtered = allBlogs.filter(b => shopIds.has(b.shopId) || shopIds.has(Number(b.shopId)));
-      renderPosts(filtered);
-
-      // 高亮分类
-      document.querySelectorAll('.category-item').forEach(el => {
-        const name = el.dataset.name;
-        el.style.opacity = (name === catName) ? '1' : '0.5';
-      });
-      showToast('分类：' + catName + (filtered.length === 0 ? '（暂无帖子）' : ''));
-    }).catch(() => showToast('加载失败'));
+// ==================== 分类导航 → 跳转店铺列表页 ====================
+function goCategory(catName) {
+  window.location.href = 'shop-list.html?city=' + encodeURIComponent(currentCity) + '&category=' + encodeURIComponent(catName);
 }
 
 // ==================== 帖子详情跳转 ====================
@@ -252,8 +231,7 @@ async function handleLike(e, blogId) {
         blog.isLiked = !blog.isLiked;
         blog.liked = (blog.liked || 0) + (blog.isLiked ? 1 : -1);
       }
-      renderPosts(activeCategory ? allBlogs.filter(b =>
-        (b.shopName || '').includes(activeCategory)) : allBlogs);
+      renderPosts(allBlogs);
     } else if (res.data.code === 401) {
       showToast('请先登录');
     }
@@ -272,11 +250,11 @@ function bindEvents() {
     cityEl.onclick = openCityPicker;
   }
 
-  // 分类点击
+  // 分类点击 → 跳转店铺列表
   document.querySelectorAll('.category-item').forEach(item => {
     item.addEventListener('click', function () {
       const name = this.dataset.name;
-      if (name) filterByCategory(name);
+      if (name) goCategory(name);
     });
   });
 
@@ -289,10 +267,12 @@ function bindEvents() {
     });
   }
 
-  // "更多"按钮
+  // "更多"按钮 — 跳转帖子列表页
   const btnMore = document.getElementById('btnMore');
   if (btnMore) {
-    btnMore.addEventListener('click', () => showToast('更多精选 — 开发中'));
+    btnMore.addEventListener('click', () => {
+      window.location.href = 'blog.html?city=' + encodeURIComponent(currentCity);
+    });
   }
 
   // 底部 TabBar
