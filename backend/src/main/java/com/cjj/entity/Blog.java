@@ -63,6 +63,11 @@ public class Blog implements Serializable {
     private String shopName;
 
     /**
+     * 评分（1.0~5.0）
+     */
+    private java.math.BigDecimal score;
+
+    /**
      * 标题
      */
     private String title;

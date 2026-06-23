@@ -8,8 +8,10 @@ import com.cjj.dto.Result;
 import com.cjj.dto.ScrollResult;
 import com.cjj.dto.UserDTO;
 import com.cjj.entity.Blog;
+import com.cjj.entity.Shop;
 import com.cjj.entity.User;
 import com.cjj.mapper.BlogMapper;
+import com.cjj.mapper.ShopMapper;
 import com.cjj.service.IBlogService;
 import com.cjj.service.IFollowService;
 import com.cjj.service.IUserService;
@@ -58,35 +60,60 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
     private com.cjj.service.IShopService shopService;
 
     @Resource
+    private ShopMapper shopMapper;
+
+    @Resource
     private IFollowService followService;
 
     /**
      * 发布探店笔记
-     * 同时推送到所有粉丝的 Feed 收件箱
+     * 1. 校验登录、商户存在、评分合法
+     * 2. 保存帖子
+     * 3. 更新商户平均评分
+     * 4. 推送到粉丝 Feed 收件箱
      */
     public Result saveBlog(Blog blog) {
         UserDTO user = UserHolder.getUser();
         if (user == null) {
             return Result.fail(401, "请先登录");
         }
+
+        // 校验商户是否存在
+        if (blog.getShopId() == null) {
+            return Result.fail("shopId 不能为空");
+        }
+        Shop shop = shopService.getById(blog.getShopId());
+        if (shop == null) {
+            return Result.fail("商户不存在");
+        }
+
+        // 校验评分
+        if (blog.getScore() != null) {
+            double s = blog.getScore().doubleValue();
+            if (s < 1.0 || s > 5.0) {
+                return Result.fail("评分必须在 1.0 ~ 5.0 之间");
+            }
+        }
+
         blog.setUserId(user.getId());
         boolean saved = save(blog);
         if (!saved) {
             return Result.fail("发布失败");
         }
 
+        // 更新商户平均评分：基于该商户所有帖子的评分计算平均值
+        if (blog.getScore() != null) {
+            updateShopAvgScore(blog.getShopId());
+        }
+
         // --- 推模式 Feed 流：推送到所有粉丝的收件箱 ---
-        // 为什么用推模式？
-        //   粉丝数较小（普通用户级别），推模式延迟低、读取方便
-        //   如果是大 V（百万粉丝），可改为拉模式或混合模式
         String fansKey = FANS_KEY + user.getId();
         Set<String> fans = stringRedisTemplate.opsForSet().members(fansKey);
         if (fans != null && !fans.isEmpty()) {
-            long score = System.currentTimeMillis();
+            long timestamp = System.currentTimeMillis();
             for (String fanId : fans) {
-                // ZADD feed:{粉丝ID} score blogId
                 stringRedisTemplate.opsForZSet()
-                        .add(FEED_KEY + fanId, blog.getId().toString(), score);
+                        .add(FEED_KEY + fanId, blog.getId().toString(), timestamp);
             }
         }
 
@@ -94,8 +121,33 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         stringRedisTemplate.opsForZSet()
                 .add(FEED_KEY + user.getId(), blog.getId().toString(), System.currentTimeMillis());
 
-        log.info("city-review 笔记发布成功 → blogId={}, userId={}", blog.getId(), user.getId());
+        log.info("city-review 笔记发布成功 → blogId={}, userId={}, shopId={}, score={}",
+                blog.getId(), user.getId(), blog.getShopId(), blog.getScore());
         return Result.ok(blog.getId());
+    }
+
+    /**
+     * 更新商户平均评分
+     * tb_shop.score 存储为 score × 10 的整数（如 4.8 → 48）
+     */
+    private void updateShopAvgScore(Long shopId) {
+        List<Blog> blogs = getBaseMapper().selectList(
+                Wrappers.<Blog>lambdaQuery()
+                        .eq(Blog::getShopId, shopId)
+                        .isNotNull(Blog::getScore));
+        if (blogs.isEmpty()) return;
+
+        double avg = blogs.stream()
+                .mapToDouble(b -> b.getScore() != null ? b.getScore().doubleValue() : 0)
+                .average().orElse(0);
+
+        // 商户评分存储为 int（×10），如 4.8 → 48
+        Shop updateShop = new Shop();
+        updateShop.setId(shopId);
+        updateShop.setScore((int) Math.round(avg * 10));
+        shopMapper.updateById(updateShop);
+
+        log.info("city-review 商户平均评分更新 → shopId={}, avg={}, stored={}", shopId, avg, updateShop.getScore());
     }
 
     /**
