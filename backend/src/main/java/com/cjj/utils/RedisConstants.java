@@ -37,6 +37,8 @@ public class RedisConstants {
     public static final String SECKILL_STOCK_KEY = "seckill:stock:";
     /** 秒杀一人一单 Key 前缀，后接 voucherId:userId */
     public static final String SECKILL_ORDER_KEY = "seckill:order:";
+    /** 一人一单记录 TTL（天），秒杀结束后自动清理 */
+    public static final Long SECKILL_ORDER_TTL = 7L;
     /** 秒杀分布式锁 Key 前缀 */
     public static final String LOCK_SECKILL_KEY = "lock:seckill:";
     /** 秒杀异步下单 List 队列 Key */
@@ -57,16 +59,22 @@ public class RedisConstants {
     // ==================== 功能五：UV 统计 HyperLogLog ====================
     /** 商户 UV 统计 Key 前缀，后接 shopId:yyyyMMdd */
     public static final String UV_SHOP_KEY = "uv:shop:";
+    /** UV 统计 TTL（天），按日分 key，保留 30 天 */
+    public static final Long UV_SHOP_TTL = 30L;
 
     // ==================== 功能六：用户签到 BitMap ====================
     /** 用户签到 Key 前缀，后接 userId:yyyyMM */
     public static final String USER_SIGN_KEY = "sign:";
+    /** 签到记录 TTL（天），保留 1 年 */
+    public static final Long USER_SIGN_TTL = 365L;
 
     // ==================== 功能七：好友关注 Set ====================
     /** 关注集合 Key 前缀 */
     public static final String FOLLOW_KEY = "follow:";
     /** 粉丝集合 Key 前缀 */
     public static final String FANS_KEY = "fans:";
+    /** 收藏商户 Set Key 前缀 */
+    public static final String FAVORITE_KEY = "favorite:";
 
     // ==================== 功能八：达人探店 ====================
     /** 探店笔记点赞 List Key 前缀（按时间倒序） */
@@ -75,6 +83,8 @@ public class RedisConstants {
     public static final String BLOG_LIKED_RANK_KEY = "blog:liked:rank:";
     /** 探店笔记点赞排行榜 TTL（天） */
     public static final Long BLOG_LIKED_TTL = 30L;
+    /** 探店笔记点赞用户 Set TTL（天），与排行榜同生命周期 */
+    public static final Long BLOG_LIKED_USER_TTL = 30L;
     /** 用户收件箱 Feed 流 SortedSet Key 前缀 */
     public static final String FEED_KEY = "feed:";
     /** Feed 流 TTL（天） */

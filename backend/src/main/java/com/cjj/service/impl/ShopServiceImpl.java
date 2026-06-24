@@ -228,6 +228,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         String uvKey = UV_SHOP_KEY + shopId + ":" + today;
         // PFADD：记录独立访客，已存在则忽略
         stringRedisTemplate.opsForHyperLogLog().add(uvKey, "0");
+        stringRedisTemplate.expire(uvKey, UV_SHOP_TTL, TimeUnit.DAYS);
         return Result.ok();
     }
 
@@ -240,6 +241,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
                 String today = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
                 String uvKey = UV_SHOP_KEY + shopId + ":" + today;
                 stringRedisTemplate.opsForHyperLogLog().add(uvKey, "0");
+                stringRedisTemplate.expire(uvKey, UV_SHOP_TTL, TimeUnit.DAYS);
             } catch (Exception ignored) {
             }
         }).start();

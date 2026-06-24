@@ -6,6 +6,8 @@
   border-radius: 16px;
   padding: 20px 18px;
   box-shadow: var(--card-shadow);
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 /* 作者信息 */
@@ -220,11 +222,11 @@
 
 /* 评论列表容器 */
 #commentSection {
-  margin: 12px;
-  padding-bottom: 70px; /* 为底部输入栏留空间 */
+  padding-bottom: 70px;
 }
 
 .comment-section {
+  margin: 12px;
   background: var(--white);
   border-radius: 16px;
   padding: 18px;

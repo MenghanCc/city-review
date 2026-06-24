@@ -64,6 +64,7 @@ public class MvcConfig implements WebMvcConfigurer {
                         "/api/voucher/list/**",    // 优惠券列表（公开）
                         "/api/blog/hot",           // 热门笔记（公开）
                         "/api/comments/blog/**",   // 评论列表（公开）
+                        "/api/favorite/check/**",  // 收藏状态（公开）
                         "/api/upload/**"           // 图片访问（公开）
                 ).order(1);
     }

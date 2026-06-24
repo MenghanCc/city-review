@@ -17,8 +17,10 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 import static com.cjj.utils.RedisConstants.USER_SIGN_KEY;
+import static com.cjj.utils.RedisConstants.USER_SIGN_TTL;
 
 /**
  * city-review 签到服务实现
@@ -67,6 +69,9 @@ public class SignServiceImpl extends ServiceImpl<SignMapper, Sign> implements IS
         if (Boolean.TRUE.equals(isSigned)) {
             return Result.fail("今日已签到，请勿重复签到");
         }
+
+        // 每次签到续期 1 年
+        stringRedisTemplate.expire(key, USER_SIGN_TTL, TimeUnit.DAYS);
 
         log.info("city-review 签到成功 → userId={}, date={}, offset={}", userId, now, offset);
         return Result.ok("签到成功");

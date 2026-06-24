@@ -106,6 +106,7 @@
 .sd-bottom-bar { position: fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:750px; display:flex; background:#fff; border-top:1px solid #EEE; z-index:200; }
 .sd-bottom-btn { flex:1; text-align:center; padding:14px 0; font-size:14px; cursor:pointer; }
 .sd-fav { color:#666; }
+.sd-fav.faved { color: #FF9500; }
 .sd-review { background:var(--orange); color:#fff; font-weight:600; }
 
 /* 占位 */

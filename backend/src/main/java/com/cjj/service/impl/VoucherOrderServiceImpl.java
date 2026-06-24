@@ -130,6 +130,11 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
             if (Boolean.TRUE.equals(absent)) {
                 log.info("city-review 预加载秒杀库存 → voucherId={}, stock={}", sv.getVoucherId(), sv.getStock());
             }
+            // 给一人一单 Set 设 TTL（秒杀结束后 7 天自动清理）
+            String orderKey = SECKILL_ORDER_KEY + sv.getVoucherId();
+            if (Boolean.TRUE.equals(stringRedisTemplate.hasKey(orderKey))) {
+                stringRedisTemplate.expire(orderKey, SECKILL_ORDER_TTL, TimeUnit.DAYS);
+            }
         }
     }
 
@@ -204,6 +209,9 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         // --- 方式二（参考）：Pub/Sub 通知 ---
         // 选用 Pub/Sub 的原因：实时推送给所有订阅者，适合状态通知
         // stringRedisTemplate.convertAndSend(SECKILL_ORDER_CHANNEL, JSONUtil.toJsonStr(message));
+
+        // 给一人一单 Set 设 TTL
+        stringRedisTemplate.expire(SECKILL_ORDER_KEY + voucherId, SECKILL_ORDER_TTL, TimeUnit.DAYS);
 
         log.info("city-review 秒杀成功 → voucherId={}, userId={}, orderId={}", voucherId, userId, orderId);
 

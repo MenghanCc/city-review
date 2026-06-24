@@ -31,6 +31,8 @@ if (!shopId) {
   loadVouchers();
   // 加载商品
   loadProducts();
+  // 检查收藏状态
+  checkFav();
 })();
 
 function renderImages(d) {
@@ -415,6 +417,37 @@ function buyProduct(productId, price) {
         }
       });
     });
+  });
+}
+
+var isFav = false;
+function checkFav() {
+  if (!localStorage.getItem('token')) return;
+  api.get('/favorite/check/' + shopId).then(function(r) {
+    if (r.data.code === 200 && r.data.data) setFavState(true);
+  });
+}
+function setFavState(faved) {
+  isFav = faved;
+  var btn = document.getElementById('sdFavBtn');
+  if (!btn) return;
+  var icon = btn.querySelector('i');
+  var text = document.getElementById('sdFavText');
+  if (faved) {
+    icon.className = 'fas fa-star'; btn.classList.add('faved');
+    if (text) text.textContent = '已收藏';
+  } else {
+    icon.className = 'far fa-star'; btn.classList.remove('faved');
+    if (text) text.textContent = '收藏';
+  }
+}
+function toggleFav() {
+  if (!localStorage.getItem('token')) { showToast('请先登录'); return; }
+  api.put('/favorite/' + shopId).then(function(r) {
+    if (r.data.code === 200) {
+      setFavState(r.data.data);
+      showToast(r.data.data ? '已收藏' : '已取消收藏');
+    }
   });
 }
 

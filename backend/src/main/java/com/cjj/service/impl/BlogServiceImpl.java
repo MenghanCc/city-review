@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static com.cjj.utils.RedisConstants.*;
@@ -192,8 +193,10 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         long timestamp = System.currentTimeMillis();
         // ZADD blog:liked:rank:{blogId} timestamp userId
         stringRedisTemplate.opsForZSet().add(rankKey, userId.toString(), timestamp);
+        stringRedisTemplate.expire(rankKey, BLOG_LIKED_TTL, TimeUnit.DAYS);
         // SADD blog:liked:user:{blogId} userId
         stringRedisTemplate.opsForSet().add(userKey, userId.toString());
+        stringRedisTemplate.expire(userKey, BLOG_LIKED_USER_TTL, TimeUnit.DAYS);
         // 同步更新 MySQL 点赞数
         update(Wrappers.<Blog>lambdaUpdate()
                 .setSql("liked = liked + 1").eq(Blog::getId, blogId));

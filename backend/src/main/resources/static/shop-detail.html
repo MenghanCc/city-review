@@ -13,7 +13,7 @@
     <header class="top-bar" id="topBar">
       <span class="back-btn" onclick="history.back()"><i class="fas fa-arrow-left"></i></span>
       <h1 class="top-bar-title" id="shopName">商户详情</h1>
-      <span class="top-bar-right" onclick="showToast('收藏功能开发中')"><i class="far fa-heart"></i></span>
+      <span class="top-bar-right"></span>
     </header>
 
     <!-- 图片轮播 -->
@@ -48,8 +48,8 @@
 
     <!-- 底部栏 -->
     <div class="sd-bottom-bar">
-      <div class="sd-bottom-btn sd-fav" onclick="showToast('收藏功能开发中')">
-        <i class="far fa-star"></i> 收藏
+      <div class="sd-bottom-btn sd-fav" id="sdFavBtn" onclick="toggleFav()">
+        <i class="far fa-star"></i> <span id="sdFavText">收藏</span>
       </div>
       <div class="sd-bottom-btn sd-review" onclick="goWriteBlog()">
         <i class="fas fa-pen"></i> 写点评
