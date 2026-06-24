@@ -298,7 +298,11 @@ function bindEvents() {
         window.location.href = 'map.html';
         return;
       }
-      showToast(({message:'消息'}[name]||name) + ' — 功能开发中');
+      if (name === 'message') {
+        window.location.href = 'chat.html';
+        return;
+      }
+      showToast(name + ' — 功能开发中');
     });
   });
 
