@@ -86,7 +86,9 @@
   color: #999;
 }
 
-.blog-footer span { display: flex; align-items: center; gap: 4px; }
+.blog-footer span { display: flex; align-items: center; gap: 4px; cursor: default; }
+.blog-footer span.liked,
+.blog-footer span.liked i { color: #FF2442 !important; }
 
 #btnLoadMore {
   width: 200px;

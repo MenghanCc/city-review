@@ -315,9 +315,6 @@ function bindEvents() {
     });
   }
 
-  // 通知图标
-  const notify = document.querySelector('.notification-icon');
-  if (notify) notify.parentElement.addEventListener('click', () => showToast('消息通知 — 开发中'));
 }
 
 // ---- 工具 ----

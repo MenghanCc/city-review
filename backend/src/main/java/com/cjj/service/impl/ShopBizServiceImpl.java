@@ -219,12 +219,12 @@ public class ShopBizServiceImpl {
 
         // 特价券扣库存（乐观锁：WHERE stock > 0）
         if (v.getType() == 1 && v.getStock() != null && v.getStock() > 0) {
-            boolean ok = voucherMapper.update(null,
+            int rows = voucherMapper.update(null,
                     Wrappers.<Voucher>lambdaUpdate()
                             .setSql("stock = stock - 1")
                             .eq(Voucher::getId, v.getId())
                             .gt(Voucher::getStock, 0));  // ← 防超卖
-            if (!ok) throw new RuntimeException("库存不足");
+            if (rows == 0) throw new RuntimeException("库存不足");
         }
 
         log.info("city-review 购买优惠券成功 → userId={}, voucherId={}", me.getId(), voucherId);

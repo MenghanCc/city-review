@@ -10,8 +10,9 @@ function loadOrders(){
   var p = '?page=1&size=20';
   if (oType !== null) p += '&orderType=' + oType;
   api.get('/orders/my' + p).then(function(r){
-    if(r.data.code===200) render(r.data.data||[]);
-  }).catch(function(){document.getElementById('oList').innerHTML='<p style="text-align:center;padding:60px 0;color:#999;">加载失败</p>';});
+    if(r.data.code===200) { render(r.data.data||[]); }
+    else { render([]); }
+  }).catch(function(){ render([]); });
 }
 function render(list){
   var c=document.getElementById('oList');

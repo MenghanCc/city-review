@@ -1,8 +1,11 @@
 /* ============================================================
-   city-review 笔记列表页 — 展示当前城市全部帖子
+   city-review 笔记列表页
+   mode=my   → 我的点评（当前用户的帖子）
+   否则      → 城市精选笔记
    ============================================================ */
 
 const params = new URLSearchParams(window.location.search);
+const isMyMode = params.get('mode') === 'my';
 let city = params.get('city') || localStorage.getItem('city') || '武汉';
 localStorage.setItem('city', city);
 
@@ -13,12 +16,17 @@ let allItems = [];
 let currentSort = 'time';
 
 document.addEventListener('DOMContentLoaded', async () => {
-  document.getElementById('headerCity').textContent = city;
+  if (isMyMode) {
+    document.getElementById('headerCity').textContent = '我的点评';
+    document.getElementById('sortBar').style.display = 'none';
+  } else {
+    document.getElementById('headerCity').textContent = '精选笔记 · ' + city;
+  }
   await loadPage(1);
 });
 
 function switchSort(sort) {
-  if (currentSort === sort) return;
+  if (isMyMode || currentSort === sort) return;
   currentSort = sort;
   document.querySelectorAll('.sort-item').forEach(function(el) {
     el.classList.toggle('active', el.dataset.sort === sort);
@@ -32,12 +40,24 @@ async function loadPage(p) {
   if (p === 1) container.innerHTML = '<p style="text-align:center;padding:60px 0;color:#999;">加载中...</p>';
 
   try {
-    const res = await api.get('/blog/list', { params: { city: city, page: p, size: SIZE, sort: currentSort } });
+    var res;
+    if (isMyMode) {
+      res = await api.get('/blog/of/me', { params: { current: p } });
+    } else {
+      res = await api.get('/blog/list', { params: { city: city, page: p, size: SIZE, sort: currentSort } });
+    }
     if (res.data.code !== 200 || !res.data.data) return;
-    const data = res.data.data;
-    totalPages = data.pages || 1;
-    if (p === 1) allItems = data.records || [];
-    else allItems = allItems.concat(data.records || []);
+    var data = res.data.data;
+    if (isMyMode) {
+      // /of/me 直接返回记录数组
+      totalPages = 1;
+      if (p === 1) allItems = Array.isArray(data) ? data : (data.records || []);
+      else allItems = allItems.concat(Array.isArray(data) ? data : (data.records || []));
+    } else {
+      totalPages = data.pages || 1;
+      if (p === 1) allItems = data.records || [];
+      else allItems = allItems.concat(data.records || []);
+    }
     page = p;
     render();
   } catch (e) {
@@ -48,16 +68,16 @@ async function loadPage(p) {
 function render() {
   const container = document.getElementById('blogContainer');
   if (allItems.length === 0) {
-    container.innerHTML = '<p style="text-align:center;padding:60px 0;color:#999;">' + city + '暂无笔记，去其他城市看看吧</p>';
+    container.innerHTML = '<p style="text-align:center;padding:60px 0;color:#999;">' + (isMyMode ? '你还没有发布过笔记' : city + '暂无笔记，去其他城市看看吧') + '</p>';
     document.getElementById('loadMoreWrap').style.display = 'none';
     return;
   }
   container.innerHTML = allItems.map(b => `
     <div class="blog-item" onclick="window.location.href='detail.html?id=${b.id}'">
       <div class="blog-header">
-        <img class="blog-avatar" src="${b.avatar || '/imgs/default-avatar.svg'}" onerror="this.src='/imgs/default-avatar.svg'" alt="" style="width:36px;height:36px;border-radius:50%;object-fit:cover;">
+        <img class="blog-avatar" src="${b.avatar || b.icon || '/imgs/default-avatar.svg'}" onerror="this.src='/imgs/default-avatar.svg'" alt="" style="width:36px;height:36px;border-radius:50%;object-fit:cover;">
         <div>
-          <div class="blog-username">${escHtml(b.nickname || '匿名')}</div>
+          <div class="blog-username">${escHtml(b.nickname || b.name || '匿名')}</div>
           <div class="blog-shop"><i class="fas fa-store"></i> ${escHtml(b.shopName || '')}</div>
         </div>
       </div>
@@ -65,15 +85,16 @@ function render() {
       <div class="blog-summary">${escHtml(b.content || '')}</div>
       ${renderImgs(b.images)}
       <div class="blog-footer">
-        <span><i class="far fa-heart"></i> ${b.liked || 0}</span>
+        <span class="${b.isLiked ? 'liked' : ''}" onclick="event.stopPropagation();handleLike(${b.id})"><i class="${b.isLiked ? 'fas' : 'far'} fa-heart"></i> ${b.liked || 0}</span>
         <span><i class="far fa-comment-dots"></i> ${b.comments || 0}</span>
         <span style="margin-left:auto;font-size:11px;">${(b.createTime || '').substring(0,10)}</span>
       </div>
     </div>
   `).join('');
 
-  // 加载更多按钮
+  // 加载更多按钮（我的模式不显示）
   const wrap = document.getElementById('loadMoreWrap');
+  if (isMyMode) { wrap.style.display = 'none'; return; }
   if (page >= totalPages) {
     wrap.style.display = allItems.length > SIZE ? 'block' : 'none';
     if (wrap.children[0]) wrap.children[0].textContent = '已加载全部';
@@ -95,6 +116,21 @@ function renderImgs(imagesStr) {
   });
   html += '</div>';
   return html;
+}
+
+async function handleLike(blogId) {
+  if (!localStorage.getItem('token')) { showToast('请先登录'); return; }
+  try {
+    var res = await api.put('/blog/like/' + blogId);
+    if (res.data.code === 200) {
+      var blog = allItems.find(function(b) { return b.id === blogId; });
+      if (blog) {
+        blog.isLiked = !blog.isLiked;
+        blog.liked = (blog.liked || 0) + (blog.isLiked ? 1 : -1);
+      }
+      render();
+    }
+  } catch (e) { showToast('操作失败'); }
 }
 
 function loadNextPage() {

@@ -320,6 +320,25 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         Page<Blog> page = getBaseMapper().selectPage(
                 new Page<>(current, SystemConstants.MAX_PAGE_SIZE),
                 Wrappers.<Blog>lambdaQuery().eq(Blog::getUserId, user.getId()));
+
+        // 填充用户信息 + 商户名
+        User me = userService.getById(user.getId());
+        for (Blog blog : page.getRecords()) {
+            if (me != null) {
+                blog.setName(me.getNickName());
+                blog.setIcon(me.getIcon());
+            }
+            Shop shop = shopService.getById(blog.getShopId());
+            if (shop != null) {
+                blog.setShopName(shop.getName());
+            }
+            // 判断是否已点赞
+            if (user != null) {
+                Double score = stringRedisTemplate.opsForZSet()
+                        .score(BLOG_LIKED_RANK_KEY + blog.getId(), user.getId().toString());
+                blog.setIsLiked(score != null);
+            }
+        }
         return Result.ok(page.getRecords());
     }
 
