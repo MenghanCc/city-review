@@ -37,7 +37,10 @@ public class ShopBizController {
 
     @PostMapping("/api/products/purchase")
     public Result purchaseProduct(@RequestBody Map<String, Object> body) {
-        return bizService.purchaseProduct(Long.valueOf(body.get("productId").toString()));
+        Long productId = Long.valueOf(body.get("productId").toString());
+        Long userVoucherId = body.get("userVoucherId") != null ?
+                Long.valueOf(body.get("userVoucherId").toString()) : null;
+        return bizService.purchaseProduct(productId, userVoucherId);
     }
 
     // ---- 优惠券购买 ----

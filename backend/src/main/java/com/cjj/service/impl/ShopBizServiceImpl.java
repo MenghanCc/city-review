@@ -96,19 +96,51 @@ public class ShopBizServiceImpl {
     }
 
     @Transactional
-    public Result purchaseProduct(Long productId) {
+    public Result purchaseProduct(Long productId, Long userVoucherId) {
         UserDTO me = UserHolder.getUser();
         if (me == null) return Result.fail(401, "请先登录");
 
         Product p = productMapper.selectById(productId);
         if (p == null || p.getStock() <= 0) return Result.fail("商品库存不足");
 
+        BigDecimal finalPrice = p.getPrice();
+        String note = "购买商品：" + p.getName();
+
+        // 如果选择了优惠券，校验并使用
+        if (userVoucherId != null) {
+            UserVoucher uv = userVoucherMapper.selectById(userVoucherId);
+            if (uv == null || !uv.getUserId().equals(me.getId()))
+                return Result.fail("优惠券不存在");
+            if (uv.getStatus() != 0)
+                return Result.fail("优惠券已使用或已过期");
+            if (uv.getExpireTime() != null && uv.getExpireTime().isBefore(LocalDateTime.now()))
+                return Result.fail("优惠券已过期");
+            if (!uv.getShopId().equals(p.getShopId()))
+                return Result.fail("该优惠券不适用于本商户");
+
+            Voucher v = voucherMapper.selectById(uv.getVoucherId());
+            if (v == null) return Result.fail("优惠券信息异常");
+
+            // 抵扣金额 = 优惠券面额，最低抵扣至 0
+            BigDecimal discount = new BigDecimal(v.getActualValue()).divide(new BigDecimal(100));
+            if (discount.compareTo(finalPrice) > 0) discount = finalPrice;
+            finalPrice = finalPrice.subtract(discount);
+            if (finalPrice.compareTo(BigDecimal.ZERO) < 0) finalPrice = BigDecimal.ZERO;
+
+            // 标记卡券已使用
+            uv.setStatus(1);
+            uv.setUseTime(LocalDateTime.now());
+            userVoucherMapper.updateById(uv);
+
+            note = "购买商品：" + p.getName() + " (使用优惠券抵扣¥" + discount + ")";
+        }
+
         Wallet w = getOrCreateWallet(me.getId());
-        if (w.getBalance().compareTo(p.getPrice()) < 0)
+        if (w.getBalance().compareTo(finalPrice) < 0)
             return Result.fail("余额不足，请先充值");
 
         // 扣款
-        w.setBalance(w.getBalance().subtract(p.getPrice()));
+        w.setBalance(w.getBalance().subtract(finalPrice));
         walletMapper.updateById(w);
 
         // 订单
@@ -117,7 +149,7 @@ public class ShopBizServiceImpl {
         o.setOrderType(2);
         o.setTargetId(productId);
         o.setShopId(p.getShopId());
-        o.setAmount(p.getPrice());
+        o.setAmount(finalPrice);
         o.setStatus(1);
         o.setCreatedAt(LocalDateTime.now());
         orderMapper.insert(o);
@@ -125,8 +157,8 @@ public class ShopBizServiceImpl {
         // 流水
         WalletTransaction tx = new WalletTransaction();
         tx.setUserId(me.getId()); tx.setTransactionType(2);
-        tx.setAmount(p.getPrice().negate()); tx.setBalanceAfter(w.getBalance());
-        tx.setOrderId(o.getId()); tx.setNote("购买商品：" + p.getName());
+        tx.setAmount(finalPrice.negate()); tx.setBalanceAfter(w.getBalance());
+        tx.setOrderId(o.getId()); tx.setNote(note);
         tx.setCreatedAt(LocalDateTime.now());
         walletTxMapper.insert(tx);
 

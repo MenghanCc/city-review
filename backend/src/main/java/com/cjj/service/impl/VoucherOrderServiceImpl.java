@@ -57,6 +57,21 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
     @Resource
     private com.cjj.utils.RedisIdWorker redisIdWorker;
 
+    @Resource
+    private com.cjj.mapper.OrderMapper newOrderMapper;
+
+    @Resource
+    private com.cjj.mapper.UserVoucherMapper userVoucherMapper;
+
+    @Resource
+    private com.cjj.mapper.VoucherMapper voucherMapper;
+
+    @Resource
+    private com.cjj.mapper.WalletMapper walletMapper;
+
+    @Resource
+    private com.cjj.mapper.WalletTransactionMapper walletTxMapper;
+
     // ==================== Lua 脚本加载 ====================
     private static final DefaultRedisScript<Long> SECKILL_SCRIPT;
 
@@ -344,6 +359,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
 
     @Transactional(rollbackFor = Exception.class)
     public void saveOrderToDB(Long orderId, Long userId, Long voucherId) {
+        // 1. 旧表秒杀订单
         VoucherOrder order = new VoucherOrder();
         order.setId(orderId);
         order.setUserId(userId);
@@ -353,6 +369,56 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         order.setCreateTime(LocalDateTime.now());
         order.setPayTime(LocalDateTime.now());
         save(order);
+
+        // 2. 优惠券信息（payValue 单位是分，转元）
+        com.cjj.entity.Voucher v = voucherMapper.selectById(voucherId);
+        if (v == null) return;
+
+        java.math.BigDecimal price = new java.math.BigDecimal(v.getPayValue())
+                .divide(new java.math.BigDecimal(100));
+
+        // 3. 写入新订单表 tb_order（我的订单列表查这里）
+        com.cjj.entity.Order newOrder = new com.cjj.entity.Order();
+        newOrder.setUserId(userId);
+        newOrder.setOrderType(1);
+        newOrder.setTargetId(voucherId);
+        newOrder.setShopId(v.getShopId());
+        newOrder.setAmount(price);
+        newOrder.setStatus(1);
+        newOrder.setCreatedAt(LocalDateTime.now());
+        newOrderMapper.insert(newOrder);
+
+        // 4. 写入卡券表 tb_user_voucher（我的卡券查这里）
+        com.cjj.entity.UserVoucher uv = new com.cjj.entity.UserVoucher();
+        uv.setUserId(userId);
+        uv.setVoucherId(voucherId);
+        uv.setShopId(v.getShopId());
+        uv.setStatus(0);
+        uv.setBuyTime(LocalDateTime.now());
+        uv.setExpireTime(LocalDateTime.now().plusDays(30));
+        userVoucherMapper.insert(uv);
+
+        // 5. 钱包扣款 + 流水
+        com.cjj.entity.Wallet w = walletMapper.selectOne(
+                com.baomidou.mybatisplus.core.toolkit.Wrappers
+                        .<com.cjj.entity.Wallet>lambdaQuery()
+                        .eq(com.cjj.entity.Wallet::getUserId, userId));
+        if (w != null && w.getBalance().compareTo(price) >= 0) {
+            w.setBalance(w.getBalance().subtract(price));
+            walletMapper.updateById(w);
+
+            com.cjj.entity.WalletTransaction tx = new com.cjj.entity.WalletTransaction();
+            tx.setUserId(userId);
+            tx.setTransactionType(2);
+            tx.setAmount(price.negate());
+            tx.setBalanceAfter(w.getBalance());
+            tx.setOrderId(newOrder.getId());
+            tx.setNote("秒杀优惠券：" + v.getTitle());
+            tx.setCreatedAt(LocalDateTime.now());
+            walletTxMapper.insert(tx);
+        }
+
+        log.info("city-review 秒杀订单落库完成 → orderId={}, userId={}, voucherId={}", orderId, userId, voucherId);
     }
 
 }

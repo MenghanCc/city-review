@@ -219,8 +219,8 @@ function renderVouchers(vouchers) {
       : '无限量 | 随时可买';
 
     var btnHtml = isSeckill
-      ? '<button class="vc-btn vc-btn-seckill" onclick="event.stopPropagation();seckillVoucher(' + v.id + ')">⚡ 立即秒杀</button>'
-      : '<button class="vc-btn vc-btn-buy" onclick="event.stopPropagation();buyVoucher(' + v.id + ')">立即购买</button>';
+      ? '<button class="vc-btn vc-btn-seckill" onclick="event.stopPropagation();seckillVoucher(' + v.id + ',' + (v.payValue / 100).toFixed(2) + ')">⚡ 立即秒杀</button>'
+      : '<button class="vc-btn vc-btn-buy" onclick="event.stopPropagation();buyVoucher(' + v.id + ',' + (v.payValue / 100).toFixed(2) + ')">立即购买</button>';
 
     return '<div class="vc-item">' +
       '<div class="vc-left">' +
@@ -237,22 +237,120 @@ function renderVouchers(vouchers) {
   }).join('');
 }
 
-function buyVoucher(voucherId) {
-  if (!localStorage.getItem('token')) { showToast('请先登录'); return; }
-  showToast('购买功能开发中');
+// ---- 购买确认弹窗（统一） ----
+var walletBalance = 0;
+var pendingConfirm = null;  // 存储待执行的确认函数
+
+function loadWalletBalance(cb) {
+  if (!localStorage.getItem('token')) { cb(); return; }
+  api.get('/wallet/balance').then(function (r) {
+    walletBalance = (r.data.data && r.data.data.balance) ? r.data.data.balance * 1 : 0;
+    cb();
+  }).catch(function () { cb(); });
 }
 
-function seckillVoucher(voucherId) {
-  if (!localStorage.getItem('token')) { showToast('请先登录'); return; }
-  showToast('秒杀功能开发中');
+function showPurchaseModal(opts) {
+  var old = document.getElementById('purchaseModal');
+  if (old) old.remove();
+
+  pendingConfirm = opts.onConfirm;
+
+  var voucherHtml = '';
+  if (opts.voucherSelect) {
+    voucherHtml = '<div class="pm-label">选择优惠券</div><select class="pm-select" id="pmVoucherSelect" onchange="updateModalPrice(' + opts.price + ')">';
+    voucherHtml += '<option value="0">不使用优惠券</option>';
+    opts.voucherSelect.vouchers.forEach(function (v) {
+      voucherHtml += '<option value="' + v.faceValue + '|' + v.id + '">' + esc(v.voucherTitle) + ' (面额¥' + (v.faceValue / 100).toFixed(0) + ')</option>';
+    });
+    voucherHtml += '</select>';
+  }
+
+  var canAfford = walletBalance >= opts.price;
+  var afterBalance = walletBalance - opts.price;
+
+  var html = '<div class="purchase-modal-overlay" id="purchaseModal" onclick="if(event.target===this)this.remove()">' +
+    '<div class="purchase-modal">' +
+      '<div class="pm-title">' + opts.title + '</div>' +
+      '<div class="pm-price" id="pmPrice">¥' + opts.price.toFixed(2) + '</div>' +
+      '<div class="pm-balance-row">' +
+        '<span>当前余额：<b>¥' + walletBalance.toFixed(2) + '</b></span>' +
+        '<span>购买后余额：<b id="pmAfterBalance" class="' + (afterBalance < 0 ? 'pm-balance-short' : '') + '">¥' + afterBalance.toFixed(2) + '</b></span>' +
+      '</div>' +
+      (canAfford ? '' : '<div class="pm-short-tip">⚠️ 余额不足，请先充值</div>') +
+      voucherHtml +
+      '<div class="pm-btns">' +
+        '<button class="pm-btn-cancel" onclick="document.getElementById(\'purchaseModal\').remove()">取消</button>' +
+        '<button class="pm-btn-ok" ' + (canAfford ? '' : 'disabled style="background:#CCC;"') + ' onclick="document.getElementById(\'purchaseModal\').remove(); doConfirm()">确认购买</button>' +
+      '</div>' +
+    '</div></div>';
+
+  document.body.insertAdjacentHTML('beforeend', html);
 }
 
-// ---- 商品 ----
+// 全局确认函数：从 pendingConfirm 取出并执行
+function doConfirm() {
+  if (pendingConfirm) { pendingConfirm(); pendingConfirm = null; }
+}
+
+// 优惠券选择变化时更新价格
+function updateModalPrice(origPrice) {
+  var sel = document.getElementById('pmVoucherSelect');
+  if (!sel) return;
+  var val = sel.value;
+  var faceValue = val ? parseFloat(val.split('|')[0]) / 100 : 0;
+  var finalPrice = Math.max(0, origPrice - faceValue);
+  var after = walletBalance - finalPrice;
+  document.getElementById('pmPrice').textContent = '¥' + finalPrice.toFixed(2);
+  var afterEl = document.getElementById('pmAfterBalance');
+  afterEl.textContent = '¥' + after.toFixed(2);
+  afterEl.className = after < 0 ? 'pm-balance-short' : '';
+
+  // 余额不足时禁用确认按钮
+  var btn = document.getElementById('pmConfirmBtn');
+  if (btn) {
+    btn.disabled = after < 0;
+    btn.style.background = after < 0 ? '#CCC' : '';
+  }
+}
+
+// ---- 平价券购买 ----
+function buyVoucher(voucherId, price) {
+  if (!localStorage.getItem('token')) { showToast('请先登录'); return; }
+  loadWalletBalance(function () {
+    showPurchaseModal({
+      title: '确认购买优惠券',
+      price: price,
+      onConfirm: function () {
+        api.post('/vouchers/purchase', { voucherId: voucherId }).then(function (res) {
+          if (res.data.code === 200) { showToast('购买成功！'); loadVouchers(); }
+          else showToast(res.data.msg || '购买失败');
+        }).catch(function () { showToast('购买失败'); });
+      }
+    });
+  });
+}
+
+// ---- 特价券秒杀 ----
+function seckillVoucher(voucherId, price) {
+  if (!localStorage.getItem('token')) { showToast('请先登录'); return; }
+  loadWalletBalance(function () {
+    showPurchaseModal({
+      title: '确认秒杀 · 每人限购1份',
+      price: price,
+      onConfirm: function () {
+        api.post('/voucher-order/seckill/' + voucherId).then(function (res) {
+          if (res.data.code === 200) { showToast('秒杀成功！订单号：' + res.data.data); }
+          else showToast(res.data.msg || '秒杀失败');
+        }).catch(function () { showToast('秒杀失败'); });
+      }
+    });
+  });
+}
+
+// ---- 商品购买 ----
 function loadProducts() {
   api.get('/products/available', { params: { shopId: shopId } }).then(function (res) {
-    if (res.data.code === 200) {
-      renderProducts(res.data.data || []);
-    }
+    if (res.data.code === 200) renderProducts(res.data.data || []);
   }).catch(function () {
     document.getElementById('sdProducts').innerHTML = '<p class="empty-hint">暂无商品</p>';
   });
@@ -261,35 +359,54 @@ function loadProducts() {
 function renderProducts(products) {
   var container = document.getElementById('sdProducts');
   if (!products || products.length === 0) {
-    container.innerHTML = '<p class="empty-hint">暂无商品</p>';
-    return;
+    container.innerHTML = '<p class="empty-hint">暂无商品</p>'; return;
   }
-
   container.innerHTML = products.map(function (p) {
     var img = p.coverImg || 'https://picsum.photos/seed/prod' + p.id + '/400/300';
-    return '<div class="prod-item" onclick="event.stopPropagation();">' +
+    return '<div class="prod-item">' +
       '<img class="prod-img" src="' + img + '" onerror="this.src=\'https://picsum.photos/seed/fallback' + p.id + '/400/300\'">' +
-      '<div class="prod-body">' +
-        '<div class="prod-name">' + esc(p.name) + '</div>' +
-        '<div class="prod-desc">' + esc(p.description || '') + '</div>' +
-        '<div class="prod-bottom">' +
-          '<span class="prod-price">¥' + (p.price * 1).toFixed(2) + '</span>' +
-          '<button class="prod-buy-btn" onclick="event.stopPropagation();buyProduct(' + p.id + ')">购买</button>' +
-        '</div>' +
-      '</div>' +
-    '</div>';
+      '<div class="prod-body"><div class="prod-name">' + esc(p.name) + '</div>' +
+      '<div class="prod-desc">' + esc(p.description || '') + '</div>' +
+      '<div class="prod-bottom"><span class="prod-price">¥' + (p.price * 1).toFixed(2) + '</span>' +
+      '<button class="prod-buy-btn" onclick="event.stopPropagation();buyProduct(' + p.id + ', ' + (p.price * 1).toFixed(2) + ')">购买</button>' +
+      '</div></div></div>';
   }).join('');
 }
 
-function buyProduct(productId) {
+function buyProduct(productId, price) {
   if (!localStorage.getItem('token')) { showToast('请先登录'); return; }
-  api.post('/products/purchase', { productId: productId }).then(function (res) {
-    if (res.data.code === 200) {
-      showToast('购买成功！');
-    } else {
-      showToast(res.data.msg || '购买失败');
-    }
-  }).catch(function () { showToast('购买失败'); });
+  loadWalletBalance(function () {
+    api.get('/user/vouchers', { params: { status: 0 } }).then(function (res) {
+      var vouchers = [];
+      if (res.data.code === 200) vouchers = (res.data.data || []).filter(function (v) { return v.shopId == shopId; });
+      showPurchaseModal({
+        title: '购买商品',
+        price: price,
+        voucherSelect: { vouchers: vouchers },
+        onConfirm: function () {
+          var sel = document.getElementById('pmVoucherSelect');
+          var userVoucherId = null;
+          if (sel && sel.value !== '0') userVoucherId = Number(sel.value.split('|')[1]);
+          var body = { productId: productId };
+          if (userVoucherId) body.userVoucherId = userVoucherId;
+          api.post('/products/purchase', body).then(function (res) {
+            if (res.data.code === 200) showToast('购买成功！');
+            else showToast(res.data.msg || '购买失败');
+          }).catch(function () { showToast('购买失败'); });
+        }
+      });
+    }).catch(function () {
+      showPurchaseModal({
+        title: '购买商品', price: price,
+        onConfirm: function () {
+          api.post('/products/purchase', { productId: productId }).then(function (res) {
+            if (res.data.code === 200) showToast('购买成功！');
+            else showToast(res.data.msg || '购买失败');
+          }).catch(function () { showToast('购买失败'); });
+        }
+      });
+    });
+  });
 }
 
 function esc(s) { return s ? s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') : ''; }
