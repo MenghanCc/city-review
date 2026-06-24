@@ -2,6 +2,7 @@
 
 /* 保存按钮 */
 .top-bar-right#btnSave {
+  width: auto;
   font-size: 15px;
   font-weight: 600;
   color: var(--orange);
