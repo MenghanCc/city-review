@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>写点评 - 城市点评</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/write-blog.css">
+</head>
+<body>
+  <div id="app">
+    <!-- 顶部导航 -->
+    <header class="top-bar">
+      <span class="back-btn" onclick="history.back()"><i class="fas fa-arrow-left"></i></span>
+      <h1 class="top-bar-title">写点评</h1>
+      <span class="top-bar-right" id="btnPublish" onclick="publishBlog()">发布</span>
+    </header>
+
+    <!-- 商户信息 -->
+    <div class="wb-shop-card" id="wbShopCard">
+      <img class="wb-shop-img" id="wbShopImg" src="" alt="">
+      <div class="wb-shop-info">
+        <div class="wb-shop-name" id="wbShopName">加载中...</div>
+        <div class="wb-shop-addr" id="wbShopAddr"></div>
+      </div>
+    </div>
+
+    <!-- 评分 -->
+    <div class="wb-section">
+      <div class="wb-label">评分</div>
+      <div class="wb-stars" id="wbStars">
+        <i class="star-item far fa-star" data-star="1" data-half="0.5"></i>
+        <i class="star-item far fa-star" data-star="2" data-half="1.5"></i>
+        <i class="star-item far fa-star" data-star="3" data-half="2.5"></i>
+        <i class="star-item far fa-star" data-star="4" data-half="3.5"></i>
+        <i class="star-item far fa-star" data-star="5" data-half="4.5"></i>
+      </div>
+      <span class="wb-score-text" id="wbScoreText">轻点星星来评分</span>
+    </div>
+
+    <!-- 标题 -->
+    <div class="wb-section">
+      <input class="wb-input" id="wbTitle" placeholder="给这次体验写个标题（选填）" maxlength="100">
+    </div>
+
+    <!-- 正文 -->
+    <div class="wb-section">
+      <textarea class="wb-textarea" id="wbContent" placeholder="分享你的真实体验..." rows="6" maxlength="2000"></textarea>
+    </div>
+
+    <!-- 图片上传（仿头像上传：opacity:0 覆盖层） -->
+    <div class="wb-section">
+      <div class="wb-label">图片（最多9张）</div>
+      <div class="wb-images" id="wbImages">
+        <!-- 缩略图预览区 -->
+        <div class="wb-img-add-wrap">
+          <div class="wb-img-add-inner">
+            <i class="fas fa-plus"></i>
+          </div>
+          <input type="file" id="wbFileInput" accept="image/*" multiple class="wb-file-input">
+        </div>
+      </div>
+    </div>
+
+    <!-- 底部发布按钮 -->
+    <div class="wb-bottom">
+      <button class="wb-publish-btn" onclick="publishBlog()">发布点评</button>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="js/common.js"></script>
+  <script src="js/write-blog.js"></script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>附近商户 - 城市点评</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="stylesheet" href="css/map.css">
+  <script>
+    window._AMapSecurityConfig = {
+      securityJsCode: '6adea2cc575ed3053c301f251932c0ec'
+    };
+  </script>
+  <script src="https://webapi.amap.com/maps?v=2.0&key=0f893dd00bba819eb2aeaf876636b22b"></script>
+</head>
+<body>
+  <div id="container"></div>
+
+  <!-- 顶部覆盖栏 -->
+  <div class="map-top-bar">
+    <a href="index.html" class="map-back-btn"><i class="fas fa-arrow-left"></i></a>
+    <span class="map-city" id="mapCity">武汉</span>
+    <span class="map-relocate-btn" onclick="relocate()" title="重新定位"><i class="fas fa-location-arrow"></i></span>
+  </div>
+
+  <!-- 底部商户列表面板 -->
+  <div class="map-bottom-panel" id="mapBottomPanel">
+    <div class="map-panel-header">
+      <span class="map-shop-count" id="mapShopCount">附近商户加载中...</span>
+    </div>
+    <div class="map-shop-list" id="mapShopList"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="js/common.js"></script>
+  <script src="js/map.js"></script>
+</body>
+</html>

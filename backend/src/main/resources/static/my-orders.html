@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>我的订单 - 城市点评</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/biz-common.css">
+</head>
+<body><div id="app">
+<header class="top-bar"><a href="my.html" class="back-btn"><i class="fas fa-arrow-left"></i></a>
+<h1 class="top-bar-title">我的订单</h1><div class="top-bar-right"></div></header>
+<div class="tab-bar-row" id="oTabBar">
+<span class="tab-item-v active" onclick="switchOTab(null)">全部</span>
+<span class="tab-item-v" onclick="switchOTab(1)">优惠券订单</span>
+<span class="tab-item-v" onclick="switchOTab(2)">商品订单</span>
+</div>
+<div id="oList"><p style="text-align:center;padding:60px 0;color:#999;">加载中...</p></div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script src="js/common.js"></script>
+<script src="js/my-orders.js"></script>
+</body></html>

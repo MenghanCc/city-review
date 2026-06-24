@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>笔记详情 - 城市点评</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/detail.css">
+</head>
+<body>
+  <div id="app">
+    <!-- 导航 -->
+    <header class="top-bar">
+      <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i></a>
+      <h1 class="top-bar-title" id="detailTitle">笔记详情</h1>
+      <div class="top-bar-right" id="detailShare"><i class="far fa-share-square"></i></div>
+    </header>
+
+    <!-- 内容加载中 -->
+    <div id="detailContent">
+      <p style="text-align:center;padding:60px 0;color:#999;">加载中...</p>
+    </div>
+
+    <!-- 评论区 -->
+    <div id="commentSection"></div>
+
+    <!-- 底部评论输入栏 -->
+    <div id="commentInputBar">
+      <input type="text" id="commentInput" placeholder="写下你的评论..." maxlength="500">
+      <button id="commentSendBtn" onclick="sendComment()">发送</button>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="js/common.js"></script>
+  <script src="js/detail.js"></script>
+</body>
+</html>

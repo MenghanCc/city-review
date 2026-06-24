@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>登录 - 城市点评</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/login.css">
+</head>
+<body>
+  <div id="app">
+    <header class="top-bar">
+      <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i></a>
+      <h1 class="top-bar-title">手机号登录</h1>
+      <div class="top-bar-right"></div>
+    </header>
+
+    <div class="login-card">
+      <div class="login-logo">🏙️</div>
+      <p class="login-subtitle">city-review 城市点评</p>
+
+      <!-- 手机号 -->
+      <div class="input-group">
+        <i class="fas fa-mobile-alt input-icon"></i>
+        <input type="tel" id="phoneInput" class="form-input" placeholder="请输入手机号" maxlength="11" autocomplete="tel">
+      </div>
+
+      <!-- 验证码 -->
+      <div class="input-group">
+        <i class="fas fa-lock input-icon"></i>
+        <input type="text" id="codeInput" class="form-input code-input" placeholder="请输入验证码" maxlength="6" autocomplete="off">
+        <button id="btnCode" class="btn-code" onclick="handleSendCode()">获取验证码</button>
+      </div>
+
+      <p class="code-hint" id="codeHint"></p>
+
+      <button id="btnLogin" class="btn-login" onclick="handleLogin()">登 录</button>
+
+      <p class="login-tips">未注册手机号将自动创建账号</p>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="js/common.js"></script>
+  <script src="js/login.js"></script>
+</body>
+</html>

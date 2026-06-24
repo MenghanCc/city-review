@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>用户主页 - 城市点评</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/user-profile.css">
+</head>
+<body>
+  <div id="app">
+    <!-- 顶部导航 -->
+    <header class="top-bar">
+      <span class="back-btn" onclick="history.back()"><i class="fas fa-arrow-left"></i></span>
+      <h1 class="top-bar-title" id="upNickname">用户主页</h1>
+      <div class="top-bar-right"></div>
+    </header>
+
+    <!-- 用户信息卡片 -->
+    <div class="up-card">
+      <img class="up-avatar" id="upAvatar" src="/imgs/default-avatar.svg" alt="">
+      <div class="up-info">
+        <div class="up-name-row">
+          <span class="up-name" id="upName"></span>
+          <span class="up-gender" id="upGender"></span>
+        </div>
+        <div class="up-meta" id="upMeta"></div>
+      </div>
+      <div class="up-bio" id="upBio"></div>
+    </div>
+
+    <!-- 数据统计栏 -->
+    <div class="up-stats">
+      <div class="up-stat" onclick="goFollowList('follow')">
+        <span class="up-stat-num" id="upFollowCount">0</span>
+        <span class="up-stat-label">关注</span>
+      </div>
+      <div class="up-stat" onclick="goFollowList('fans')">
+        <span class="up-stat-num" id="upFansCount">0</span>
+        <span class="up-stat-label">粉丝</span>
+      </div>
+      <div class="up-stat">
+        <span class="up-stat-num" id="upLikeCount">0</span>
+        <span class="up-stat-label">获赞</span>
+      </div>
+    </div>
+
+    <!-- 笔记列表 -->
+    <div class="up-blogs-section">
+      <div class="up-blogs-title" id="upBlogsTitle">Ta 的笔记</div>
+      <div class="up-blogs-grid" id="upBlogsGrid"></div>
+      <div class="up-load-more" id="upLoadMore" style="display:none;">
+        <button class="btn btn-outline" onclick="loadMore()">加载更多</button>
+      </div>
+    </div>
+
+    <!-- 底部操作栏 -->
+    <div class="up-bottom-bar">
+      <button class="up-btn up-follow-btn" id="upFollowBtn" onclick="toggleFollow()">
+        <i class="fas fa-user-plus"></i> 关注
+      </button>
+      <button class="up-btn up-msg-btn" onclick="goChat()">
+        <i class="far fa-comment-dots"></i> 发消息
+      </button>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="js/common.js"></script>
+  <script src="js/user-profile.js"></script>
+</body>
+</html>

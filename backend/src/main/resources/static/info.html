@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>个人信息 - 城市点评</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/info.css">
+</head>
+<body>
+  <div id="app">
+    <header class="top-bar">
+      <a href="my.html" class="back-btn"><i class="fas fa-arrow-left"></i></a>
+      <h1 class="top-bar-title">编辑资料</h1>
+      <span class="top-bar-right" id="btnSave" onclick="handleSave()">保存</span>
+    </header>
+
+    <!-- 头像 -->
+    <div class="info-avatar-section" id="avatarSection">
+      <div class="info-avatar-wrap">
+        <div class="info-avatar" id="infoAvatar">👤</div>
+        <input type="file" id="avatarInput" accept="image/*" class="avatar-file-input">
+      </div>
+      <p class="avatar-hint">点击更换头像</p>
+    </div>
+
+    <!-- 可编辑字段 -->
+    <div class="info-list">
+      <div class="info-row readonly">
+        <span class="info-label"><i class="fas fa-user"></i> 用户ID</span>
+        <span class="info-value" id="infoId">-</span>
+      </div>
+
+      <div class="info-row">
+        <span class="info-label"><i class="fas fa-id-card"></i> 昵称</span>
+        <input class="info-input" id="editNickname" placeholder="请输入昵称" maxlength="32">
+      </div>
+
+      <div class="info-row">
+        <span class="info-label"><i class="fas fa-venus-mars"></i> 性别</span>
+        <select class="info-input" id="editGender">
+          <option value="">请选择</option>
+          <option value="0">男</option>
+          <option value="1">女</option>
+        </select>
+      </div>
+
+      <div class="info-row">
+        <span class="info-label"><i class="fas fa-birthday-cake"></i> 生日</span>
+        <input class="info-input" type="date" id="editBirthday">
+      </div>
+
+      <div class="info-row">
+        <span class="info-label"><i class="fas fa-map-marker-alt"></i> 所在地</span>
+        <input class="info-input" id="editCity" placeholder="请输入城市" maxlength="64">
+      </div>
+
+      <div class="info-row">
+        <span class="info-label"><i class="fas fa-pen"></i> 个人简介</span>
+      </div>
+      <div class="info-row intro-row">
+        <textarea class="info-textarea" id="editIntro" placeholder="介绍一下自己吧..." maxlength="128"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="js/common.js"></script>
+  <script src="js/info.js"></script>
+</body>
+</html>

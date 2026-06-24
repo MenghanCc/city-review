@@ -1,0 +1,102 @@
+/* ==================== 店铺列表页 ==================== */
+
+.shop-list-header {
+  margin: 0 12px;
+  padding: 16px 16px 12px;
+  background: var(--white);
+  border-radius: var(--radius) var(--radius) 0 0;
+  margin-top: 12px;
+}
+
+.shop-list-city {
+  font-size: 13px;
+  color: var(--orange);
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+.shop-list-cat {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--dark-text);
+}
+
+.shop-list-body {
+  margin: 0 12px 12px;
+  background: var(--white);
+  border-radius: 0 0 var(--radius) var(--radius);
+  overflow: hidden;
+}
+
+.shop-item {
+  display: flex;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid #F5F5F5;
+  cursor: pointer;
+  transition: background .12s;
+}
+
+.shop-item:last-child { border-bottom: none; }
+
+.shop-item:active { background: #FAFAFA; }
+
+.shop-thumb {
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: #EEE;
+  flex-shrink: 0;
+}
+
+.fallback-thumb {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  background: #F0F0F0;
+}
+
+.shop-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+}
+
+.shop-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--dark-text);
+}
+
+.shop-addr {
+  font-size: 12px;
+  color: #999;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.shop-meta {
+  font-size: 12px;
+  color: #888;
+}
+
+.shop-meta span { margin-right: 10px; }
+
+.shop-meta .score { color: #f5a623; font-weight: 600; }
+
+.shop-area {
+  font-size: 11px;
+  color: #BBB;
+  background: #F8F8F8;
+  padding: 2px 8px;
+  border-radius: 4px;
+  display: inline-block;
+  margin-top: 2px;
+  width: fit-content;
+}

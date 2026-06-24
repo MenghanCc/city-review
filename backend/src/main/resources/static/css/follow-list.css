@@ -1,0 +1,33 @@
+.fl-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 16px; background: #FFF;
+  border-bottom: 1px solid #F5F5F5; cursor: pointer;
+}
+.fl-item:active { background: #FAFAFA; }
+
+.fl-avatar {
+  width: 44px; height: 44px; border-radius: 50%;
+  object-fit: cover; background: #EEE; flex-shrink: 0;
+}
+
+.fl-info { flex: 1; min-width: 0; }
+
+.fl-name {
+  font-size: 15px; font-weight: 600; color: #222;
+}
+
+.fl-bio {
+  font-size: 12px; color: #AAA; margin-top: 2px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.fl-avatar-placeholder {
+  display: flex; align-items: center; justify-content: center;
+  background: #F0F0F0; color: #CCC; font-size: 18px;
+}
+
+.fl-empty {
+  width: 100%; text-align: center; padding: 80px 0; color: #BBB;
+}
+.fl-empty p { margin: 0; font-size: 14px; }
+.fl-empty i { display: block; font-size: 48px; margin-bottom: 12px; }

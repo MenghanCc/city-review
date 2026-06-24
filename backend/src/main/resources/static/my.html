@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>我的 - 城市点评</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/my.css">
+</head>
+<body>
+  <div id="app">
+    <!-- ========== 顶部导航 ========== -->
+    <header class="top-bar">
+      <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i></a>
+      <h1 class="top-bar-title">我的</h1>
+      <div class="top-bar-right" onclick="logout()">
+        <i class="fas fa-sign-out-alt" style="font-size:16px;color:#999;"></i>
+      </div>
+    </header>
+
+    <!-- ========== 用户头部信息（点击跳转个人信息详情页） ========== -->
+    <div class="profile-card" onclick="goInfo()">
+      <div class="profile-avatar" id="profileAvatar">👤</div>
+      <div class="profile-info">
+        <div class="profile-name" id="profileName">登录后可查看</div>
+        <div class="profile-intro" id="profileIntro">点击登录，发现城市好去处</div>
+      </div>
+      <i class="fas fa-chevron-right profile-arrow"></i>
+    </div>
+
+    <!-- ========== 数据统计栏 ========== -->
+    <div class="stats-bar">
+      <div class="stats-item" onclick="goMyFollow('follow')">
+        <span class="stats-num" id="followCount">0</span>
+        <span class="stats-label">关注</span>
+      </div>
+      <div class="stats-item" onclick="goMyFollow('fans')">
+        <span class="stats-num" id="fansCount">0</span>
+        <span class="stats-label">粉丝</span>
+      </div>
+      <div class="stats-item">
+        <span class="stats-num" id="likeCount">0</span>
+        <span class="stats-label">获赞</span>
+      </div>
+    </div>
+
+    <!-- ========== 签到卡片 ========== -->
+    <div class="sign-card">
+      <div class="sign-info">
+        <div class="sign-title">📅 每日签到</div>
+        <div class="sign-desc" id="signDesc">签到获取积分，兑换优惠券</div>
+      </div>
+      <button class="sign-btn" id="btnSign" onclick="handleSign()">
+        <span class="sign-btn-text">签到</span>
+      </button>
+    </div>
+
+    <!-- ========== 功能网格（4宫格） ========== -->
+    <div class="grid-menu">
+      <div class="grid-item" onclick="window.location.href='my-vouchers.html'">
+        <div class="grid-icon coupon-bg">🎫</div>
+        <span>卡券</span>
+      </div>
+      <div class="grid-item" onclick="window.location.href='wallet.html'">
+        <div class="grid-icon wallet-bg">💰</div>
+        <span>钱包</span>
+      </div>
+      <div class="grid-item" onclick="window.location.href='my-orders.html'">
+        <div class="grid-icon order-bg">📦</div>
+        <span>我的订单</span>
+      </div>
+      <div class="grid-item" onclick="goMyBlogs()">
+        <div class="grid-icon review-bg">📝</div>
+        <span>我的点评</span>
+      </div>
+    </div>
+
+    <!-- ========== 签到日历 ========== -->
+    <div class="calendar-card">
+      <div class="calendar-header">
+        <span class="calendar-title" id="calendarTitle">签到日历</span>
+        <span class="calendar-total" id="calendarTotal">本月共 0 天</span>
+      </div>
+      <div class="calendar-weekdays">
+        <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+      </div>
+      <div class="calendar-grid" id="calendarGrid">
+        <!-- JS 动态渲染 -->
+      </div>
+    </div>
+
+    <!-- ========== 底部导航栏 ========== -->
+    <footer class="tab-bar">
+      <div class="tab-item" data-tab="home" onclick="window.location.href='index.html'">
+        <i class="fas fa-home"></i>
+        <span>首页</span>
+      </div>
+      <div class="tab-item" data-tab="map" onclick="window.location.href='map.html'">
+        <i class="fas fa-map-marked-alt"></i>
+        <span>地图</span>
+      </div>
+      <div class="tab-item" data-tab="message" onclick="window.location.href='chat.html'">
+        <i class="far fa-comment-dots"></i>
+        <span>消息</span>
+      </div>
+      <div class="tab-item active" data-tab="mine">
+        <i class="far fa-user"></i>
+        <span>我的</span>
+      </div>
+    </footer>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="js/common.js"></script>
+  <script src="js/my.js"></script>
+</body>
+</html>

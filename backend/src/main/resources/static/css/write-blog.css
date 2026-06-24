@@ -1,0 +1,229 @@
+/* ==================== 写点评页 ==================== */
+
+.wb-shop-card {
+  margin: 12px;
+  padding: 16px;
+  background: var(--white);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: var(--card-shadow);
+}
+
+.wb-shop-img {
+  width: 56px;
+  height: 56px;
+  border-radius: 10px;
+  object-fit: cover;
+  background: #EEE;
+  flex-shrink: 0;
+}
+
+.wb-shop-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.wb-shop-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #222;
+  margin-bottom: 4px;
+}
+
+.wb-shop-addr {
+  font-size: 12px;
+  color: #999;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 评分区域 */
+.wb-section {
+  margin: 0 12px 12px;
+  background: var(--white);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: var(--card-shadow);
+}
+
+.wb-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.wb-stars {
+  display: inline-flex;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.star-item {
+  font-size: 32px;
+  color: #E0E0E0;
+  transition: color .15s, transform .15s;
+}
+
+.star-item.fas {
+  color: #FF9500;
+}
+
+.star-item:hover {
+  transform: scale(1.12);
+}
+
+.wb-score-text {
+  display: inline-block;
+  margin-left: 12px;
+  font-size: 14px;
+  color: #FF9500;
+  font-weight: 600;
+  vertical-align: middle;
+}
+
+/* 输入框 */
+.wb-input {
+  width: 100%;
+  border: none;
+  outline: none;
+  font-size: 15px;
+  padding: 4px 0;
+  box-sizing: border-box;
+}
+
+.wb-input::placeholder {
+  color: #BBB;
+}
+
+.wb-textarea {
+  width: 100%;
+  border: none;
+  outline: none;
+  font-size: 15px;
+  resize: none;
+  line-height: 1.7;
+  padding: 4px 0;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.wb-textarea::placeholder {
+  color: #BBB;
+}
+
+/* ==================== 图片上传（仿头像上传模式） ==================== */
+.wb-images {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* 添加按钮（含覆盖层） */
+.wb-img-add-wrap {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  flex-shrink: 0;
+}
+
+.wb-img-add-inner {
+  width: 80px;
+  height: 80px;
+  border: 1.5px dashed #DDD;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #CCC;
+  font-size: 28px;
+  transition: border-color .2s, color .2s;
+  pointer-events: none;
+}
+
+.wb-img-add-wrap:hover .wb-img-add-inner {
+  border-color: var(--orange);
+  color: var(--orange);
+}
+
+/* 文件选择器覆盖层（关键：opacity:0 覆盖在按钮上方） */
+.wb-file-input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  font-size: 0;
+}
+
+/* 缩略图 */
+.wb-img-preview {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  flex-shrink: 0;
+}
+
+.wb-img-preview img {
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.wb-img-del {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 20px;
+  height: 20px;
+  background: #FF3B30;
+  color: #FFF;
+  border-radius: 50%;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  line-height: 1;
+}
+
+/* 发布按钮区域 */
+.wb-bottom {
+  padding: 16px 12px 30px;
+}
+
+.wb-publish-btn {
+  width: 100%;
+  height: 46px;
+  background: var(--orange);
+  color: #FFF;
+  border: none;
+  border-radius: 23px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity .2s;
+}
+
+.wb-publish-btn:active {
+  opacity: .85;
+}
+
+.wb-publish-btn:disabled {
+  background: #CCC;
+  cursor: not-allowed;
+}
+
+/* 发布按钮在顶栏 */
+.top-bar-right {
+  color: var(--orange);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}

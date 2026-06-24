@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>精选笔记 - 城市点评</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/blog-list.css">
+</head>
+<body>
+  <div id="app">
+    <header class="top-bar">
+      <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i></a>
+      <h1 class="top-bar-title">精选笔记 · <span id="headerCity"></span></h1>
+      <div class="top-bar-right"></div>
+    </header>
+
+    <!-- 排序切换 -->
+    <div class="sort-bar" id="sortBar" style="padding:10px 12px;">
+      <span class="sort-item active" data-sort="time" onclick="switchSort('time')">🕐 最新</span>
+      <span class="sort-item" data-sort="likes" onclick="switchSort('likes')">🔥 最热</span>
+    </div>
+
+    <div id="blogContainer">
+      <p style="text-align:center;padding:60px 0;color:#999;">加载中...</p>
+    </div>
+
+    <div id="loadMoreWrap" style="text-align:center;padding:16px;display:none;">
+      <button id="btnLoadMore" class="btn btn-outline" onclick="loadNextPage()">加载更多</button>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="js/common.js"></script>
+  <script src="js/blog-list.js"></script>
+</body>
+</html>
