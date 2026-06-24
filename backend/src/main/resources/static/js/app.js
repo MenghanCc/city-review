@@ -12,14 +12,7 @@ let currentSort = 'time';  // 'time' | 'likes'
 
 // 国内城市列表
 const CITY_LIST = [
-  { group: '热门', cities: ['武汉','北京','上海','杭州','广州','深圳','成都','南京','重庆','西安','长沙','苏州'] },
-  { group: '华东', cities: ['上海','杭州','南京','苏州','宁波','无锡','合肥','济南','青岛','厦门','福州','南昌'] },
-  { group: '华北', cities: ['北京','天津','石家庄','太原','呼和浩特'] },
-  { group: '华南', cities: ['广州','深圳','东莞','佛山','南宁','海口','珠海'] },
-  { group: '华中', cities: ['武汉','长沙','郑州','洛阳'] },
-  { group: '西南', cities: ['成都','重庆','昆明','贵阳','拉萨'] },
-  { group: '西北', cities: ['西安','兰州','西宁','银川','乌鲁木齐'] },
-  { group: '东北', cities: ['沈阳','大连','哈尔滨','长春','吉林'] }
+  { group: '热门', cities: ['武汉','北京','上海','杭州','广州','深圳','成都','南京','重庆','西安','长沙','苏州'] }
 ];
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -49,7 +42,7 @@ function buildCityPicker() {
   if (!body) return;
   let html = '';
   CITY_LIST.forEach(group => {
-    html += '<div class="city-group-title">' + group.group + '</div><div class="city-tags">';
+    html += '<div class="city-tags">';
     group.cities.forEach(c => {
       const cls = c === currentCity ? 'city-tag active' : 'city-tag';
       html += '<span class="' + cls + '" onclick="selectCity(\'' + c + '\')">' + c + '</span>';

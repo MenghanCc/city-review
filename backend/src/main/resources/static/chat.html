@@ -15,9 +15,27 @@
       <h1 class="top-bar-title">消息</h1>
       <div class="top-bar-right"></div>
     </header>
-    <div id="convList">
-      <p style="text-align:center;padding:60px 0;color:#999;">加载中...</p>
+    <div class="chat-card">
+      <div id="convList">
+        <p style="text-align:center;padding:60px 0;color:#999;">加载中...</p>
+      </div>
     </div>
+
+    <!-- 底部导航栏 -->
+    <footer class="tab-bar">
+      <div class="tab-item" data-tab="home" onclick="window.location.href='index.html'">
+        <i class="fas fa-home"></i><span>首页</span>
+      </div>
+      <div class="tab-item" data-tab="map" onclick="window.location.href='map.html'">
+        <i class="fas fa-map-marked-alt"></i><span>地图</span>
+      </div>
+      <div class="tab-item active" data-tab="message">
+        <i class="far fa-comment-dots"></i><span>消息</span>
+      </div>
+      <div class="tab-item" data-tab="mine" onclick="window.location.href='my.html'">
+        <i class="far fa-user-circle"></i><span>我的</span>
+      </div>
+    </footer>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>

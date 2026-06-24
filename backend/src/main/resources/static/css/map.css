@@ -2,9 +2,26 @@
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
-html, body, #container {
-  width: 100%; height: 100vh;
+html, body {
+  width: 100%; height: 100%;
   overflow: hidden;
+  margin: 0; padding: 0;
+  background: #F5F6FA;
+}
+
+#container {
+  position: fixed; top: 0; bottom: 52px;
+  left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: 750px;
+  overflow: hidden;
+}
+
+/* 修复高德地图 canvas 超出容器 */
+#container .amap-container,
+#container .amap-layers,
+#container canvas {
+  max-width: 100vw !important;
+  overflow: hidden !important;
 }
 
 /* 顶部覆盖栏 */
@@ -48,7 +65,7 @@ html, body, #container {
 
 /* 底部面板 */
 .map-bottom-panel {
-  position: fixed; bottom: 0; left: 50%;
+  position: fixed; bottom: 52px; left: 50%;
   transform: translateX(-50%);
   width: 100%; max-width: 750px;
   background: rgba(255,255,255,.97);

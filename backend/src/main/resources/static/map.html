@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>附近商户 - 城市点评</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/map.css">
   <script>
     window._AMapSecurityConfig = {
@@ -30,6 +31,22 @@
     </div>
     <div class="map-shop-list" id="mapShopList"></div>
   </div>
+
+  <!-- 底部导航栏 -->
+  <footer class="tab-bar">
+    <div class="tab-item" data-tab="home" onclick="window.location.href='index.html'">
+      <i class="fas fa-home"></i><span>首页</span>
+    </div>
+    <div class="tab-item active" data-tab="map">
+      <i class="fas fa-map-marked-alt"></i><span>地图</span>
+    </div>
+    <div class="tab-item" data-tab="message" onclick="window.location.href='chat.html'">
+      <i class="far fa-comment-dots"></i><span>消息</span>
+    </div>
+    <div class="tab-item" data-tab="mine" onclick="window.location.href='my.html'">
+      <i class="far fa-user-circle"></i><span>我的</span>
+    </div>
+  </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <script src="js/common.js"></script>

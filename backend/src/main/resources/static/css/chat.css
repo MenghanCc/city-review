@@ -1,7 +1,16 @@
 /* ==================== 消息页 ==================== */
 
+/* 圆角卡片容器 */
+.chat-card {
+  margin: 12px;
+  background: var(--white);
+  border-radius: 16px;
+  box-shadow: var(--card-shadow);
+  overflow: hidden;
+}
+
 /* 会话列表 */
-#convList { padding-bottom: 70px; }
+#convList { }
 
 .conv-item {
   display: flex; align-items: center; gap: 12px;

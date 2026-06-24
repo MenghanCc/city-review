@@ -71,6 +71,7 @@ var CAT_COLORS = {
     });
     addMyLocationMarker(currentLng, currentLat);
     loadNearbyShops();
+    fixMapBounds();
     return;
   }
 
@@ -79,14 +80,23 @@ var CAT_COLORS = {
     localStorage.removeItem('map_location');
   }
 
-  // 4. 用城市坐标初始化地图（不调 GPS，只等手工点"重新定位"）
+  // 4. 用城市坐标立即渲染，后台尝试 GPS 精确定位
   map = new AMap.Map('container', {
     center: [currentLng, currentLat],
     zoom: DEFAULT_ZOOM,
     resizeEnable: true
   });
   loadNearbyShops();
+  fixMapBounds();
+  tryGeolocation();
 })();
+
+// 强制地图边界适配视口
+function fixMapBounds() {
+  if (!map) return;
+  setTimeout(function() { map.resize(); }, 200);
+}
+window.addEventListener('resize', function() { if (map) map.resize(); });
 
 // ---- 切换到指定城市（核心兜底） ----
 function setCity(city) {
@@ -132,8 +142,7 @@ function tryGeolocation() {
       currentLng = lng;
       currentLat = lat;
       addMyLocationMarker(lng, lat);
-      map.setCenter([lng, lat]);
-      map.setZoom(15);
+      // 自动定位：只更新数据，不拖动地图
       loadNearbyShops();
     },
     function () {
@@ -185,9 +194,8 @@ function relocate() {
       updateCityName(currentLng, currentLat);
       saveCachedLocation(currentLng, currentLat, currentCity);
       addMyLocationMarker(currentLng, currentLat);
-      map.setCenter([currentLng, currentLat]);
-      map.setZoom(15);
-      loadNearbyShops();
+      map.setZoomAndCenter(15, [currentLng, currentLat]);
+      loadNearbyShops(true);  // skipFitView=true
       showToast('定位成功');
     },
     function () { showToast('定位失败，请检查浏览器定位权限'); },
@@ -196,7 +204,7 @@ function relocate() {
 }
 
 // ---- 加载附近商户 ----
-function loadNearbyShops() {
+function loadNearbyShops(skipFitView) {
   api.get('/shops/nearby', {
     params: { lng: currentLng, lat: currentLat, radius: 5000 }
   }).then(function (res) {
@@ -204,7 +212,7 @@ function loadNearbyShops() {
       nearbyShops = res.data.data.list || [];
       var total = res.data.data.total || nearbyShops.length;
       document.getElementById('mapShopCount').textContent = '附近 ' + total + ' 家商户';
-      renderMarkers(nearbyShops);
+      renderMarkers(nearbyShops, skipFitView);
       renderShopList(nearbyShops);
     } else {
       nearbyShops = [];
@@ -219,7 +227,7 @@ function loadNearbyShops() {
 }
 
 // ---- 渲染地图标注 ----
-function renderMarkers(shops) {
+function renderMarkers(shops, skipFitView) {
   clearMarkers();
 
   shops.forEach(function (shop) {
@@ -249,7 +257,7 @@ function renderMarkers(shops) {
     allMarkers.push(marker);
   });
 
-  if (allMarkers.length > 0) {
+  if (!skipFitView && allMarkers.length > 0) {
     map.setFitView(allMarkers, false, [60, 60, 200, 180]);
   }
 }
