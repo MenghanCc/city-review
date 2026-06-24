@@ -280,15 +280,18 @@ function showPurchaseModal(opts) {
       voucherHtml +
       '<div class="pm-btns">' +
         '<button class="pm-btn-cancel" onclick="document.getElementById(\'purchaseModal\').remove()">取消</button>' +
-        '<button class="pm-btn-ok" ' + (canAfford ? '' : 'disabled style="background:#CCC;"') + ' onclick="document.getElementById(\'purchaseModal\').remove(); doConfirm()">确认购买</button>' +
+        '<button class="pm-btn-ok" ' + (canAfford ? '' : 'disabled style="background:#CCC;"') + ' onclick="doConfirm()">确认购买</button>' +
       '</div>' +
     '</div></div>';
 
   document.body.insertAdjacentHTML('beforeend', html);
 }
 
-// 全局确认函数：从 pendingConfirm 取出并执行
+// 全局确认函数：先读券选择，再移除弹窗，最后执行回调
 function doConfirm() {
+  var sel = document.getElementById('pmVoucherSelect');
+  window._pmVoucherValue = sel ? sel.value : '0';
+  document.getElementById('purchaseModal').remove();
   if (pendingConfirm) { pendingConfirm(); pendingConfirm = null; }
 }
 
@@ -384,9 +387,9 @@ function buyProduct(productId, price) {
         price: price,
         voucherSelect: { vouchers: vouchers },
         onConfirm: function () {
-          var sel = document.getElementById('pmVoucherSelect');
+          var val = window._pmVoucherValue || '0';
           var userVoucherId = null;
-          if (sel && sel.value !== '0') userVoucherId = Number(sel.value.split('|')[1]);
+          if (val !== '0') userVoucherId = Number(val.split('|')[1]);
           var body = { productId: productId };
           if (userVoucherId) body.userVoucherId = userVoucherId;
           api.post('/products/purchase', body).then(function (res) {
@@ -399,7 +402,11 @@ function buyProduct(productId, price) {
       showPurchaseModal({
         title: '购买商品', price: price,
         onConfirm: function () {
-          api.post('/products/purchase', { productId: productId }).then(function (res) {
+          var val = window._pmVoucherValue || '0';
+          var userVoucherId = val !== '0' ? Number(val.split('|')[1]) : null;
+          var body = { productId: productId };
+          if (userVoucherId) body.userVoucherId = userVoucherId;
+          api.post('/products/purchase', body).then(function (res) {
             if (res.data.code === 200) showToast('购买成功！');
             else showToast(res.data.msg || '购买失败');
           }).catch(function () { showToast('购买失败'); });

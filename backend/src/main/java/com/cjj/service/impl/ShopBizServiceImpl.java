@@ -233,6 +233,17 @@ public class ShopBizServiceImpl {
         UserDTO me = UserHolder.getUser();
         if (me == null) return Result.fail(401, "请先登录");
 
+        // 先将已过期的未使用卡券标记为已过期
+        List<UserVoucher> expired = userVoucherMapper.selectList(
+                Wrappers.<UserVoucher>lambdaQuery()
+                        .eq(UserVoucher::getUserId, me.getId())
+                        .eq(UserVoucher::getStatus, 0)
+                        .lt(UserVoucher::getExpireTime, LocalDateTime.now()));
+        for (UserVoucher uv : expired) {
+            uv.setStatus(2);
+            userVoucherMapper.updateById(uv);
+        }
+
         LambdaQueryWrapper<UserVoucher> q = Wrappers.<UserVoucher>lambdaQuery()
                 .eq(UserVoucher::getUserId, me.getId());
         if (status != null) q.eq(UserVoucher::getStatus, status);
