@@ -359,6 +359,18 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
 
     @Transactional(rollbackFor = Exception.class)
     public void saveOrderToDB(Long orderId, Long userId, Long voucherId) {
+        // 0. MySQL 乐观锁扣减秒杀库存（防超卖双重保障）
+        //    核心逻辑：WHERE stock > 0 确保不会扣成负数
+        boolean stockOk = seckillVoucherService.update()
+                .setSql("stock = stock - 1")
+                .eq("voucher_id", voucherId)
+                .gt("stock", 0)  // ← 乐观锁：库存>0才执行，防止超卖
+                .update();
+        if (!stockOk) {
+            log.error("city-review 秒杀库存不足（MySQL乐观锁） → voucherId={}", voucherId);
+            throw new RuntimeException("库存不足");
+        }
+
         // 1. 旧表秒杀订单
         VoucherOrder order = new VoucherOrder();
         order.setId(orderId);

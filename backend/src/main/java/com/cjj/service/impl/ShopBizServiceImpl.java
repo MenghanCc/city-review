@@ -217,10 +217,14 @@ public class ShopBizServiceImpl {
         uv.setExpireTime(LocalDateTime.now().plusDays(30)); // 默认30天有效
         userVoucherMapper.insert(uv);
 
-        // 特价券扣库存
-        if (v.getType() == 1 && v.getStock() != null) {
-            v.setStock(v.getStock() - 1);
-            voucherMapper.updateById(v);
+        // 特价券扣库存（乐观锁：WHERE stock > 0）
+        if (v.getType() == 1 && v.getStock() != null && v.getStock() > 0) {
+            boolean ok = voucherMapper.update(null,
+                    Wrappers.<Voucher>lambdaUpdate()
+                            .setSql("stock = stock - 1")
+                            .eq(Voucher::getId, v.getId())
+                            .gt(Voucher::getStock, 0));  // ← 防超卖
+            if (!ok) throw new RuntimeException("库存不足");
         }
 
         log.info("city-review 购买优惠券成功 → userId={}, voucherId={}", me.getId(), voucherId);
@@ -273,6 +277,8 @@ public class ShopBizServiceImpl {
             Voucher vv = vMap.get(uv.getVoucherId());
             m.put("voucherTitle", vv != null ? vv.getTitle() : "");
             m.put("faceValue", vv != null ? vv.getActualValue() : 0);
+            m.put("payValue", vv != null ? vv.getPayValue() : 0);
+            m.put("type", vv != null ? vv.getType() : 0);
             Shop ss = sMap.get(uv.getShopId());
             m.put("shopName", ss != null ? ss.getName() : "");
             result.add(m);

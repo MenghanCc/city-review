@@ -12,6 +12,7 @@
 .vcard-left { width:70px; text-align:center; background:#FFF5EB; border-radius:10px; padding:10px 4px; flex-shrink:0; }
 .vcard-value { font-size:22px; font-weight:800; color:var(--orange); }
 .vcard-value span { font-size:14px; }
+.vcard-discount-label { font-size:10px; color:#BBB; margin-top:2px; }
 .vcard-main { flex:1; min-width:0; }
 .vcard-name { font-size:14px; font-weight:600; color:#222; }
 .vcard-shop { font-size:12px; color:var(--orange); margin:3px 0; }

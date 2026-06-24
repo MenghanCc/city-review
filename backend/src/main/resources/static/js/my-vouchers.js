@@ -22,7 +22,10 @@ function render(list){
     else if(v.status===1){statusHtml='<span class="vcard-status used">已使用</span>';}
     else{statusHtml='<span class="vcard-status expired">已过期</span>';}
     var expStr=v.expireTime?'有效期至 '+(v.expireTime+'').substring(0,10):'';
-    return '<div class="vcard"><div class="vcard-left"><div class="vcard-value"><span>¥</span>'+(v.faceValue/100).toFixed(0)+'</div></div><div class="vcard-main"><div class="vcard-name">'+esc(v.voucherTitle)+'</div><div class="vcard-shop" onclick="window.location.href=\'shop-detail.html?id='+v.shopId+'\'" style="cursor:pointer;">🏪 '+esc(v.shopName)+'</div><div class="vcard-expire">'+expStr+'</div>'+statusHtml+useBtn+'</div></div>';
+    var typeLabel = v.type === 1 ? '<span style="font-size:10px;background:#FFF0F0;color:#FF3B30;padding:1px 6px;border-radius:8px;margin-left:4px;">兑换券</span>' : '<span style="font-size:10px;background:#E8F5E9;color:#4CAF50;padding:1px 6px;border-radius:8px;margin-left:4px;">代金券</span>';
+    var displayValue = v.type === 1 ? (v.payValue || 0) / 100 : (v.faceValue || 0) / 100;
+    var valueLabel = v.type === 1 ? '实付' : '面额';
+    return '<div class="vcard"><div class="vcard-left"><div class="vcard-value"><span>¥</span>'+displayValue.toFixed(v.type===1?1:0)+'</div><div class="vcard-discount-label">'+valueLabel+'</div></div><div class="vcard-main"><div class="vcard-name">'+esc(v.voucherTitle)+typeLabel+'</div><div class="vcard-shop" onclick="window.location.href=\'shop-detail.html?id='+v.shopId+'\'" style="cursor:pointer;">🏪 '+esc(v.shopName)+'</div><div class="vcard-expire">'+expStr+'</div>'+statusHtml+useBtn+'</div></div>';
   }).join('');
 }
 function useVoucher(id, shopId){window.location.href='shop-detail.html?id='+shopId+'&useVoucherId='+id;}

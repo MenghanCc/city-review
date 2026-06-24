@@ -210,13 +210,13 @@ function renderVouchers(vouchers) {
   container.innerHTML = vouchers.map(function (v) {
     var isSeckill = v.type === 1;
     var badge = isSeckill
-      ? '<span class="vc-badge vc-badge-seckill">限时秒杀</span>'
-      : '<span class="vc-badge vc-badge-normal">平价券</span>';
+      ? '<span class="vc-badge vc-badge-seckill">兑换券</span>'
+      : '<span class="vc-badge vc-badge-normal">代金券</span>';
 
     var endStr = v.endTime ? '截止 ' + (v.endTime + '').substring(0, 16).replace('T', ' ') : '';
     var info = isSeckill
-      ? '库存: ' + (v.stock || 0) + ' 份 | 每人限购1份 | ' + endStr
-      : '无限量 | 随时可买';
+      ? '兑换券 · 库存: ' + (v.stock || 0) + ' 份 | 每人限购1份 | ' + endStr
+      : '代金券 · 可抵扣商品金额 | 无限量';
 
     var btnHtml = isSeckill
       ? '<button class="vc-btn vc-btn-seckill" onclick="event.stopPropagation();seckillVoucher(' + v.id + ',' + (v.payValue / 100).toFixed(2) + ')">⚡ 立即秒杀</button>'
@@ -382,6 +382,8 @@ function buyProduct(productId, price) {
     api.get('/user/vouchers', { params: { status: 0 } }).then(function (res) {
       var vouchers = [];
       if (res.data.code === 200) vouchers = (res.data.data || []).filter(function (v) { return v.shopId == shopId; });
+      // 只展示平价券（type=0 代金券，用于抵扣）；特价券（type=1）是兑换券不在此使用
+      vouchers = vouchers.filter(function (v) { return v.type === 0; });
       showPurchaseModal({
         title: '购买商品',
         price: price,
