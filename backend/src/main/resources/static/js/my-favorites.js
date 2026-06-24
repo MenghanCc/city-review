@@ -1,0 +1,7 @@
+(function(){if(!localStorage.getItem('token')){window.location.href='login.html';return;}loadFavs();})();
+function loadFavs(){api.get('/favorite/my').then(function(r){if(r.data.code===200)render(r.data.data||[]);});}
+function render(list){var c=document.getElementById('favList');
+if(!list.length){c.innerHTML='<p style="text-align:center;padding:80px 0;color:#BBB;"><i class="far fa-star" style="font-size:40px;display:block;margin-bottom:10px;"></i>暂无收藏</p>';return;}
+c.innerHTML=list.map(function(s){var stars='';var sc=Math.round((s.score||0)/10);for(var i=0;i<5;i++)stars+=i<sc?'<i class="fas fa-star"></i>':'<i class="far fa-star"></i>';
+return '<div class="shop-item" onclick="window.location.href=\'shop-detail.html?id='+s.id+'\'"><img class="shop-thumb" src="'+(s.coverImg||'https://picsum.photos/seed/shopfav'+s.id+'/200/200')+'" onerror="this.src=\'https://picsum.photos/seed/favfallback'+s.id+'/200/200\'"><div class="shop-info"><div class="shop-name">'+esc(s.name)+'</div><div class="shop-addr">'+esc(s.area||'')+' '+esc(s.address||'')+'</div><div class="shop-meta"><span class="shop-stars">'+stars+' '+((s.score||0)/10).toFixed(1)+'</span><span>💰 ¥'+(s.avgPrice||'-')+'/人</span></div></div><i class="fas fa-chevron-right" style="color:#CCC;"></i></div>';}).join('');}
+function esc(s){return s?s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'):'';}
