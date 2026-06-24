@@ -63,6 +63,9 @@ public class UserController {
     private com.cjj.mapper.BlogMapper blogMapper;
 
     @Resource
+    private com.cjj.mapper.FollowMapper followMapper;
+
+    @Resource
     private StringRedisTemplate stringRedisTemplate;
 
     @Value("${file.upload-dir:uploads}")
@@ -139,9 +142,21 @@ public class UserController {
 
         UserInfo info = userInfoService.getById(userId);
 
-        // 关注数、粉丝数（Redis Set SCARD）
+        // 关注数、粉丝数（Redis 优先，为空查 MySQL）
         Long followCount = stringRedisTemplate.opsForSet().size(FOLLOW_KEY + userId);
+        if (followCount == null || followCount == 0) {
+            followCount = (long) followMapper.selectCount(
+                    com.baomidou.mybatisplus.core.toolkit.Wrappers
+                            .<com.cjj.entity.Follow>lambdaQuery()
+                            .eq(com.cjj.entity.Follow::getUserId, userId));
+        }
         Long fansCount = stringRedisTemplate.opsForSet().size(FANS_KEY + userId);
+        if (fansCount == null || fansCount == 0) {
+            fansCount = (long) followMapper.selectCount(
+                    com.baomidou.mybatisplus.core.toolkit.Wrappers
+                            .<com.cjj.entity.Follow>lambdaQuery()
+                            .eq(com.cjj.entity.Follow::getFollowUserId, userId));
+        }
         // 获赞数（从 tb_blog 聚合）
         Long likeCount = 0L;
         try {
@@ -187,10 +202,22 @@ public class UserController {
         }
         Long userId = user.getId();
 
-        // 关注数（Redis Set SCARD）
+        // 关注数：Redis 优先，为空则查 MySQL 兜底
         Long followCount = stringRedisTemplate.opsForSet().size(FOLLOW_KEY + userId);
-        // 粉丝数（Redis Set SCARD）
+        if (followCount == null || followCount == 0) {
+            followCount = (long) followMapper.selectCount(
+                    com.baomidou.mybatisplus.core.toolkit.Wrappers
+                            .<com.cjj.entity.Follow>lambdaQuery()
+                            .eq(com.cjj.entity.Follow::getUserId, userId));
+        }
+        // 粉丝数：Redis 优先，为空则查 MySQL 兜底
         Long fansCount = stringRedisTemplate.opsForSet().size(FANS_KEY + userId);
+        if (fansCount == null || fansCount == 0) {
+            fansCount = (long) followMapper.selectCount(
+                    com.baomidou.mybatisplus.core.toolkit.Wrappers
+                            .<com.cjj.entity.Follow>lambdaQuery()
+                            .eq(com.cjj.entity.Follow::getFollowUserId, userId));
+        }
         // 获赞数：聚合 tb_blog 中该用户所有笔记的 liked 字段
         long likeCount = 0L;
         try {

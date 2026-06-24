@@ -73,8 +73,22 @@ public class RedisConstants {
     public static final String BLOG_LIKED_KEY = "blog:liked:";
     /** 探店笔记点赞排行榜 SortedSet Key 前缀（score=时间戳） */
     public static final String BLOG_LIKED_RANK_KEY = "blog:liked:rank:";
+    /** 探店笔记点赞排行榜 TTL（天） */
+    public static final Long BLOG_LIKED_TTL = 30L;
     /** 用户收件箱 Feed 流 SortedSet Key 前缀 */
     public static final String FEED_KEY = "feed:";
+    /** Feed 流 TTL（天） */
+    public static final Long FEED_TTL = 7L;
     /** 探店笔记点赞用户 Set（用于去重判断是否已点赞） */
     public static final String BLOG_LIKED_USER_KEY = "blog:liked:user:";
+
+    // ==================== 功能九：全局唯一 ID ====================
+    /** 全局 ID 自增 Key 前缀 */
+    public static final String ID_INCREMENT_KEY = "icr:";
+
+    // ==================== 功能十：消息通知 ====================
+    /** 消息通知 Pub/Sub 频道前缀 */
+    public static final String MSG_NOTIFY_CHANNEL = "msg:notify:";
+    /** 消息通知长轮询超时（秒） */
+    public static final Long MSG_POLL_TIMEOUT = 30L;
 }

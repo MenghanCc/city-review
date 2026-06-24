@@ -54,6 +54,9 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
     @Resource
     private ISeckillVoucherService seckillVoucherService;
 
+    @Resource
+    private com.cjj.utils.RedisIdWorker redisIdWorker;
+
     // ==================== Lua 脚本加载 ====================
     private static final DefaultRedisScript<Long> SECKILL_SCRIPT;
 
@@ -69,13 +72,30 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
     // ==================== 启动时预加载库存 & 启动 Stream 消费者 ====================
     @PostConstruct
     public void init() {
-        // 预加载秒杀券库存到 Redis（数据库不可用时跳过，不影响启动）
         try {
             preloadSeckillStock();
         } catch (Exception e) {
-            log.warn("city-review 秒杀库存预加载失败（可能数据库未配置），跳过: {}", e.getMessage());
+            log.warn("city-review 秒杀库存预加载失败，跳过: {}", e.getMessage());
         }
-        // 启动 Stream 异步下单消费者
+        // 创建 Stream 消费者组：XGROUP CREATE stream group 0 MKSTREAM
+        try {
+            stringRedisTemplate.execute((org.springframework.data.redis.core.RedisCallback<Object>) connection -> {
+                connection.execute("XGROUP",
+                        "CREATE".getBytes(),
+                        SECKILL_ORDER_STREAM_KEY.getBytes(),
+                        SECKILL_ORDER_GROUP.getBytes(),
+                        "0".getBytes(), "MKSTREAM".getBytes());
+                return null;
+            });
+            log.info("city-review Stream 消费者组创建成功");
+        } catch (Exception e) {
+            String msg = e.getMessage() != null ? e.getMessage() : "";
+            if (msg.contains("BUSYGROUP") || msg.contains("already exists")) {
+                log.info("city-review Stream 消费者组已存在，跳过创建");
+            } else {
+                log.warn("city-review Stream 消费者组创建异常: {}", msg);
+            }
+        }
         SECKILL_ORDER_EXECUTOR.submit(new StreamOrderHandler());
     }
 
@@ -142,7 +162,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         }
 
         // --- Lua 返回 0：秒杀资格获取成功，异步下单 ---
-        long orderId = generateOrderId();
+        long orderId = redisIdWorker.nextId("order");
 
         // 构建订单消息
         Map<String, String> message = new HashMap<>();
@@ -335,12 +355,4 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         save(order);
     }
 
-    /**
-     * 全局唯一订单 ID（雪花算法风格：高32位=时间戳，低32位=Redis自增）
-     */
-    private long generateOrderId() {
-        Long incr = stringRedisTemplate.opsForValue().increment("icr:order:id");
-        long now = System.currentTimeMillis();
-        return (now << 32) | (incr & 0xFFFFFFFFL);
-    }
 }

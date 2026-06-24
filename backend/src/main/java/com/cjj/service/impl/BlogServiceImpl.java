@@ -115,14 +115,18 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         if (fans != null && !fans.isEmpty()) {
             long timestamp = System.currentTimeMillis();
             for (String fanId : fans) {
+                String feedKey = FEED_KEY + fanId;
                 stringRedisTemplate.opsForZSet()
-                        .add(FEED_KEY + fanId, blog.getId().toString(), timestamp);
+                        .add(feedKey, blog.getId().toString(), timestamp);
+                stringRedisTemplate.expire(feedKey, FEED_TTL, java.util.concurrent.TimeUnit.DAYS);
             }
         }
 
         // 也推给自己
+        String myFeedKey = FEED_KEY + user.getId();
         stringRedisTemplate.opsForZSet()
-                .add(FEED_KEY + user.getId(), blog.getId().toString(), System.currentTimeMillis());
+                .add(myFeedKey, blog.getId().toString(), System.currentTimeMillis());
+        stringRedisTemplate.expire(myFeedKey, FEED_TTL, java.util.concurrent.TimeUnit.DAYS);
 
         log.info("city-review 笔记发布成功 → blogId={}, userId={}, shopId={}, score={}",
                 blog.getId(), user.getId(), blog.getShopId(), blog.getScore());
