@@ -63,6 +63,10 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
         }
         Long userId = me.getId();
 
+        if (userId.equals(followUserId)) {
+            return Result.fail("不能关注自己");
+        }
+
         if (isFollow) {
             // --- 关注 ---
             Follow follow = new Follow();

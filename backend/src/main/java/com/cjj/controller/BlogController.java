@@ -189,6 +189,45 @@ public class BlogController {
     }
 
     /**
+     * 用户发布的笔记（分页，供他人主页查看）
+     * GET /api/blog/user/{userId}?page=1&size=10
+     */
+    @GetMapping("/user/{userId}")
+    public Result listByUser(@PathVariable("userId") Long userId,
+                              @RequestParam(value = "page", defaultValue = "1") Integer page,
+                              @RequestParam(value = "size", defaultValue = "10") Integer size) {
+        Page<Blog> blogPage = blogService.getBaseMapper().selectPage(
+                new Page<>(page, size),
+                Wrappers.<Blog>lambdaQuery()
+                        .eq(Blog::getUserId, userId)
+                        .orderByDesc(Blog::getCreateTime));
+
+        User u = userService.getById(userId);
+
+        List<Map<String, Object>> records = blogPage.getRecords().stream().map(blog -> {
+            Map<String, Object> m = new HashMap<>();
+            m.put("id", blog.getId());
+            m.put("title", blog.getTitle());
+            m.put("content", blog.getContent());
+            m.put("images", blog.getImages());
+            m.put("liked", blog.getLiked());
+            m.put("comments", blog.getComments());
+            m.put("score", blog.getScore());
+            m.put("shopId", blog.getShopId());
+            m.put("createTime", blog.getCreateTime());
+            m.put("userNickname", u != null ? u.getNickName() : "");
+            m.put("userAvatar", u != null ? u.getIcon() : "");
+            return m;
+        }).collect(Collectors.toList());
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("records", records);
+        result.put("total", blogPage.getTotal());
+        result.put("pages", blogPage.getPages());
+        return Result.ok(result);
+    }
+
+    /**
      * 商户关联帖子（分页，含用户信息）
      * GET /api/blog/shop/{shopId}?page=1&size=10
      */

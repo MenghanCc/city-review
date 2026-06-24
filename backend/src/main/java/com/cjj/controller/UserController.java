@@ -60,6 +60,9 @@ public class UserController {
     private ISignService signService;
 
     @Resource
+    private com.cjj.mapper.BlogMapper blogMapper;
+
+    @Resource
     private StringRedisTemplate stringRedisTemplate;
 
     @Value("${file.upload-dir:uploads}")
@@ -126,6 +129,54 @@ public class UserController {
     }
 
     /**
+     * 用户公开主页信息（含关注/粉丝/获赞 + 是否已关注）
+     * GET /api/user/profile/{userId}
+     */
+    @GetMapping("/profile/{userId}")
+    public Result userProfile(@PathVariable("userId") Long userId) {
+        User user = userService.getById(userId);
+        if (user == null) return Result.fail("用户不存在");
+
+        UserInfo info = userInfoService.getById(userId);
+
+        // 关注数、粉丝数（Redis Set SCARD）
+        Long followCount = stringRedisTemplate.opsForSet().size(FOLLOW_KEY + userId);
+        Long fansCount = stringRedisTemplate.opsForSet().size(FANS_KEY + userId);
+        // 获赞数（从 tb_blog 聚合）
+        Long likeCount = 0L;
+        try {
+            likeCount = blogMapper.selectList(
+                com.baomidou.mybatisplus.core.toolkit.Wrappers.<com.cjj.entity.Blog>lambdaQuery()
+                    .eq(com.cjj.entity.Blog::getUserId, userId))
+                .stream().mapToLong(b -> b.getLiked() == null ? 0 : b.getLiked()).sum();
+        } catch (Exception ignored) {}
+
+        // 当前用户是否已关注
+        boolean isFollowed = false;
+        UserDTO me = UserHolder.getUser();
+        if (me != null && !me.getId().equals(userId)) {
+            Boolean following = stringRedisTemplate.opsForSet()
+                    .isMember(FOLLOW_KEY + me.getId(), userId.toString());
+            isFollowed = Boolean.TRUE.equals(following);
+        }
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("userId", user.getId());
+        data.put("nickname", user.getNickName());
+        data.put("avatar", user.getIcon());
+        data.put("gender", info != null ? info.getGender() : null);
+        data.put("birthday", info != null ? info.getBirthday() : null);
+        data.put("city", info != null ? info.getCity() : "");
+        data.put("introduce", info != null ? info.getIntroduce() : "");
+        data.put("followCount", followCount == null ? 0 : followCount);
+        data.put("fansCount", fansCount == null ? 0 : fansCount);
+        data.put("likeCount", likeCount);
+        data.put("isFollowed", isFollowed);
+
+        return Result.ok(data);
+    }
+
+    /**
      * 用户统计数据（关注数、粉丝数、获赞数）
      */
     @GetMapping("/statistics")
@@ -140,8 +191,14 @@ public class UserController {
         Long followCount = stringRedisTemplate.opsForSet().size(FOLLOW_KEY + userId);
         // 粉丝数（Redis Set SCARD）
         Long fansCount = stringRedisTemplate.opsForSet().size(FANS_KEY + userId);
-        // 获赞数（TODO: 从探店笔记聚合，暂无则返回 0）
-        Long likeCount = 0L;
+        // 获赞数：聚合 tb_blog 中该用户所有笔记的 liked 字段
+        long likeCount = 0L;
+        try {
+            likeCount = blogMapper.selectList(
+                com.baomidou.mybatisplus.core.toolkit.Wrappers.<com.cjj.entity.Blog>lambdaQuery()
+                    .eq(com.cjj.entity.Blog::getUserId, userId))
+                .stream().mapToLong(b -> b.getLiked() == null ? 0 : b.getLiked()).sum();
+        } catch (Exception ignored) {}
 
         Map<String, Long> data = new HashMap<>();
         data.put("followCount", followCount == null ? 0 : followCount);

@@ -100,9 +100,10 @@ function renderPosts(posts) {
   container.innerHTML = posts.map(p => `
     <article class="post-card" onclick="goDetail(${p.id})">
       <div class="post-header">
-        <img class="post-avatar" src="${p.avatar || '/imgs/default-avatar.svg'}" onerror="this.src='/imgs/default-avatar.svg'" alt="" loading="lazy">
+        <img class="post-avatar" src="${p.avatar || '/imgs/default-avatar.svg'}" onerror="this.src='/imgs/default-avatar.svg'" alt="" loading="lazy"
+             onclick="event.stopPropagation();window.location.href='user-profile.html?userId=${p.userId || ''}'" style="cursor:pointer;">
         <div class="post-user-info">
-          <div class="post-nickname">${escHtml(p.nickname || '匿名')}</div>
+          <div class="post-nickname" onclick="event.stopPropagation();window.location.href='user-profile.html?userId=${p.userId || ''}'" style="cursor:pointer;">${escHtml(p.nickname || '匿名')}</div>
           <div class="post-shop"><i class="fas fa-store"></i> ${escHtml(p.shopName || '未知商户')}</div>
         </div>
       </div>
