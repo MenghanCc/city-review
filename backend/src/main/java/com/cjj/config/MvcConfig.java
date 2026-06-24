@@ -1,7 +1,7 @@
 package com.cjj.config;
 
-import com.cjj.utils.LoginInterceptor;
-import com.cjj.utils.RefreshTokenInterceptor;
+import com.cjj.interceptor.LoginInterceptor;
+import com.cjj.interceptor.RefreshTokenInterceptor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.StringRedisTemplate;
